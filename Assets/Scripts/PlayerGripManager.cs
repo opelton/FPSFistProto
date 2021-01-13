@@ -129,6 +129,7 @@ public class PlayerGripManager : MonoBehaviour {
     void BeginPunch() {
         _gripMotionState = GripMotionState.InMotion;
         _playerWeaponsManager.LowerWeapon();
+        ForwardPunch();
         PunchSequence();
     }
 
@@ -148,6 +149,10 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     Grippable FindGrippableInGrabArea() {
+        return SearchRaycast<Grippable>();
+    }
+
+    T SearchRaycast<T>() where T : MonoBehaviour {
         var lookOrigin = _playerWeaponsManager.lookPosition;
         var lookDirection = _playerWeaponsManager.shotDirection;
 
@@ -155,9 +160,9 @@ public class PlayerGripManager : MonoBehaviour {
         if (Physics.Raycast(lookOrigin, lookDirection,
                 out RaycastHit rayHit, _gripRange, _gripLayer)) {
 
-            var grippable = rayHit.collider.gameObject.GetComponent<Grippable>();
-            if (grippable != null) {
-                return grippable;
+            var raySearch = rayHit.collider.gameObject.GetComponent<T>();
+            if (raySearch != null) {
+                return raySearch;
             }
         }
 
@@ -170,13 +175,20 @@ public class PlayerGripManager : MonoBehaviour {
         // if nothing is raycast, check a small distance on all sides for a nearby item
         if (Physics.SphereCast(sphereCenter, _gripRadius, lookDirection, out RaycastHit sphereHit, sphereDistance, _gripLayer)) {
 
-            var grippable = sphereHit.collider.gameObject.GetComponent<Grippable>();
-            if (grippable != null) {
-                return grippable;
+            var sphereSearch = sphereHit.collider.gameObject.GetComponent<T>();
+            if (sphereSearch != null) {
+                return sphereSearch;
             }
         }
 
         return null;
+    }
+
+    void ForwardPunch() {
+        var buttonTarget = SearchRaycast<PunchButton>();
+        if (buttonTarget != null) {
+            buttonTarget.PressButton();
+        }
     }
 
     void Grip(Grippable gripped) {

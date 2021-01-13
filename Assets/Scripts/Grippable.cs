@@ -6,7 +6,7 @@ public class Grippable : MonoBehaviour {
     public UseType useType = UseType.Hold;
     [SerializeField] Transform gripAnchor;
     public bool _breakable = false;
-    public UnityEvent onUsed;
+    [HideInInspector] public UnityEvent onUsed;
     public Transform gripPoint { get { return gripAnchor != null ? gripAnchor : gameObject.transform; } }
 
     Collider _collider;
@@ -53,7 +53,6 @@ public class Grippable : MonoBehaviour {
     }
 
     void SmashItem() {
-        Debug.Log("Smashed");
         UseItem();
         Destroy(gameObject);
     }
@@ -74,9 +73,23 @@ public class Grippable : MonoBehaviour {
         SetLayerMask(_storedLayerMask);
     }
 
-    void OnCollisionEnter() { 
+    void OnCollisionEnter(Collision collision) { 
         if(_thrown && _breakable) { 
             SmashItem();
+
+            // var button = collision.gameObject.GetComponent<PunchButton>();
+            // if(button != null) { 
+            //     button.PressButton();
+            // }
+        }
+    }
+
+    void OnTriggerEnter(Collider other) { 
+        if(_thrown) { 
+            var button = other.gameObject.GetComponent<PunchButton>();
+            if(button != null) { 
+                button.PressButton();
+            }
         }
     }
 }
