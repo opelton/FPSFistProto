@@ -10,10 +10,16 @@ public class PunchButton : MonoBehaviour {
     [SerializeField] Transform _buttonDownPosition;
     [SerializeField] Transform _buttonUpPosition;
     [SerializeField] Transform _buttonTransform;
+    [SerializeField] Renderer _buttonRenderer;
+    [SerializeField, ColorUsage(false, true)] Color _readyColor = Color.red;
+    [SerializeField, ColorUsage(false, true)] Color _pressColor = Color.white;
+    [SerializeField] Ease _pressEasing = Ease.Linear;
+    [SerializeField] Ease _cooldownEasing = Ease.Linear;
     bool _buttonReady;
 
     void Awake() {
         _buttonReady = _readyOnAwake;
+        _buttonRenderer.material.color = _buttonReady ? _readyColor : _pressColor;
     }
 
     public void PressButton() {
@@ -24,14 +30,26 @@ public class PunchButton : MonoBehaviour {
                 onButtonPressed.Invoke();
             }
 
-            MoveButtonTo(_buttonDownPosition, _buttonPressDuration)
-                .OnComplete(BeginButtonCooldown);
+            SendButtonDown();
         }
     }
 
+    void SendButtonDown() {
+        DOTween.Sequence()
+            .Append(ChangeColorTo(_pressColor, _buttonPressDuration).SetEase(_pressEasing))
+            .Join(MoveButtonTo(_buttonDownPosition, _buttonPressDuration).SetEase(_pressEasing))
+            .OnComplete(BeginButtonCooldown);
+    }
+
     void BeginButtonCooldown() {
-        MoveButtonTo(_buttonUpPosition, _buttonCooldown)
+        DOTween.Sequence()
+            .Append(ChangeColorTo(_readyColor, _buttonCooldown).SetEase(_cooldownEasing))
+            .Join(MoveButtonTo(_buttonUpPosition, _buttonCooldown).SetEase(_cooldownEasing))
             .OnComplete(() => _buttonReady = true);
+    }
+
+    Tween ChangeColorTo(Color goal, float duration) {
+        return _buttonRenderer.material.DOColor(goal, duration);
     }
 
     Tween MoveButtonTo(Transform goal, float duration) {

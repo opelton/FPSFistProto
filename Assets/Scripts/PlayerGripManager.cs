@@ -91,6 +91,8 @@ public class PlayerGripManager : MonoBehaviour {
         var grippableThing = FindGrippableInGrabArea();
         if (grippableThing != null) {
             Grip(grippableThing);
+        } else {
+            TryPressButtonInGrabArea();
         }
     }
 
@@ -146,6 +148,13 @@ public class PlayerGripManager : MonoBehaviour {
     void EndThrow() {
         _gripMotionState = GripMotionState.Ready;
         _playerWeaponsManager.SetAimBlock(false);
+    }
+
+    void TryPressButtonInGrabArea() {
+        var button = SearchRaycast<PunchButton>();
+        if (button != null) {
+            button.PressButton();
+        }
     }
 
     Grippable FindGrippableInGrabArea() {
