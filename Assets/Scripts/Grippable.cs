@@ -73,21 +73,38 @@ public class Grippable : MonoBehaviour {
         SetLayerMask(_storedLayerMask);
     }
 
-    void OnCollisionEnter(Collision collision) { 
-        if(_thrown && _breakable) { 
+    void OnCollisionEnter(Collision collision) {
+        if (_thrown && _breakable) {
             SmashItem();
 
-            // var button = collision.gameObject.GetComponent<PunchButton>();
-            // if(button != null) { 
-            //     button.PressButton();
-            // }
+            // check for nearby button triggers to also flip
+            var checkRadius = _collider.bounds.size.magnitude * 1.2f;
+            var overlaps = Physics.OverlapSphere(_collider.bounds.center, checkRadius);
+
+            foreach (Collider nearby in overlaps) {
+                if (nearby.gameObject.GetComponent<PunchButton>() != null) {
+
+                    // check unobstructed LOS
+                    if (Physics.Raycast(_collider.bounds.center, nearby.gameObject.transform.position - _collider.bounds.center, out RaycastHit hit)) {
+                        var button = hit.collider.GetComponent<PunchButton>();
+
+                        // we hit the button as expected, nothing obstructing
+                        if (button != null) {
+                            button.PressButton();
+                        }
+                        // else { 
+                        //     Debug.Log("Button within range but LOS was obstructed!");
+                        // }
+                    }
+                }
+            }
         }
     }
 
-    void OnTriggerEnter(Collider other) { 
-        if(_thrown) { 
+    void OnTriggerEnter(Collider other) {
+        if (_thrown) {
             var button = other.gameObject.GetComponent<PunchButton>();
-            if(button != null) { 
+            if (button != null) {
                 button.PressButton();
             }
         }

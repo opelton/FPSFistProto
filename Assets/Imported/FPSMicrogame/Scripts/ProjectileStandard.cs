@@ -2,8 +2,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(ProjectileBase))]
-public class ProjectileStandard : MonoBehaviour
-{
+public class ProjectileStandard : MonoBehaviour {
     [Header("General")]
     [Tooltip("Radius of this projectile's collision detection")]
     public float radius = 0.01f;
@@ -55,8 +54,7 @@ public class ProjectileStandard : MonoBehaviour
 
     const QueryTriggerInteraction k_TriggerInteraction = QueryTriggerInteraction.Collide;
 
-    private void OnEnable()
-    {
+    private void OnEnable() {
         m_ProjectileBase = GetComponent<ProjectileBase>();
         DebugUtility.HandleErrorIfNullGetComponent<ProjectileBase, ProjectileStandard>(m_ProjectileBase, this, gameObject);
 
@@ -65,8 +63,7 @@ public class ProjectileStandard : MonoBehaviour
         Destroy(gameObject, maxLifeTime);
     }
 
-    void OnShoot()
-    {
+    void OnShoot() {
         m_ShootTime = Time.time;
         m_LastRootPosition = root.position;
         m_Velocity = transform.forward * speed;
@@ -79,46 +76,37 @@ public class ProjectileStandard : MonoBehaviour
 
         // Handle case of player shooting (make projectiles not go through walls, and remember center-of-screen trajectory)
         PlayerWeaponsManager playerWeaponsManager = m_ProjectileBase.owner.GetComponent<PlayerWeaponsManager>();
-        if(playerWeaponsManager)
-        {
+        if (playerWeaponsManager) {
             m_HasTrajectoryOverride = true;
 
             Vector3 cameraToMuzzle = (m_ProjectileBase.initialPosition - playerWeaponsManager.weaponCamera.transform.position);
 
             m_TrajectoryCorrectionVector = Vector3.ProjectOnPlane(-cameraToMuzzle, playerWeaponsManager.weaponCamera.transform.forward);
-            if (trajectoryCorrectionDistance == 0)
-            {
+            if (trajectoryCorrectionDistance == 0) {
                 transform.position += m_TrajectoryCorrectionVector;
                 m_ConsumedTrajectoryCorrectionVector = m_TrajectoryCorrectionVector;
-            }
-            else if (trajectoryCorrectionDistance < 0)
-            {
+            } else if (trajectoryCorrectionDistance < 0) {
                 m_HasTrajectoryOverride = false;
             }
-            
-            if (Physics.Raycast(playerWeaponsManager.weaponCamera.transform.position, cameraToMuzzle.normalized, out RaycastHit hit, cameraToMuzzle.magnitude, hittableLayers, k_TriggerInteraction))
-            {
-                if (IsHitValid(hit))
-                {
+
+            if (Physics.Raycast(playerWeaponsManager.weaponCamera.transform.position, cameraToMuzzle.normalized, out RaycastHit hit, cameraToMuzzle.magnitude, hittableLayers, k_TriggerInteraction)) {
+                if (IsHitValid(hit)) {
                     OnHit(hit.point, hit.normal, hit.collider);
                 }
             }
         }
     }
 
-    void Update()
-    {
+    void Update() {
         // Move
         transform.position += m_Velocity * Time.deltaTime;
-        if (inheritWeaponVelocity)
-        {
+        if (inheritWeaponVelocity) {
             transform.position += m_ProjectileBase.inheritedMuzzleVelocity * Time.deltaTime;
         }
 
         // Drift towards trajectory override (this is so that projectiles can be centered 
         // with the camera center even though the actual weapon is offset)
-        if (m_HasTrajectoryOverride && m_ConsumedTrajectoryCorrectionVector.sqrMagnitude < m_TrajectoryCorrectionVector.sqrMagnitude)
-        {
+        if (m_HasTrajectoryOverride && m_ConsumedTrajectoryCorrectionVector.sqrMagnitude < m_TrajectoryCorrectionVector.sqrMagnitude) {
             Vector3 correctionLeft = m_TrajectoryCorrectionVector - m_ConsumedTrajectoryCorrectionVector;
             float distanceThisFrame = (root.position - m_LastRootPosition).magnitude;
             Vector3 correctionThisFrame = (distanceThisFrame / trajectoryCorrectionDistance) * m_TrajectoryCorrectionVector;
@@ -126,8 +114,7 @@ public class ProjectileStandard : MonoBehaviour
             m_ConsumedTrajectoryCorrectionVector += correctionThisFrame;
 
             // Detect end of correction
-            if(m_ConsumedTrajectoryCorrectionVector.sqrMagnitude == m_TrajectoryCorrectionVector.sqrMagnitude)
-            {
+            if (m_ConsumedTrajectoryCorrectionVector.sqrMagnitude == m_TrajectoryCorrectionVector.sqrMagnitude) {
                 m_HasTrajectoryOverride = false;
             }
 
@@ -138,8 +125,7 @@ public class ProjectileStandard : MonoBehaviour
         transform.forward = m_Velocity.normalized;
 
         // Gravity
-        if (gravityDownAcceleration > 0)
-        {
+        if (gravityDownAcceleration > 0) {
             // add gravity to the projectile velocity for ballistic effect
             m_Velocity += Vector3.down * gravityDownAcceleration * Time.deltaTime;
         }
@@ -153,20 +139,16 @@ public class ProjectileStandard : MonoBehaviour
             // Sphere cast
             Vector3 displacementSinceLastFrame = tip.position - m_LastRootPosition;
             RaycastHit[] hits = Physics.SphereCastAll(m_LastRootPosition, radius, displacementSinceLastFrame.normalized, displacementSinceLastFrame.magnitude, hittableLayers, k_TriggerInteraction);
-            foreach (var hit in hits)
-            {
-                if (IsHitValid(hit) && hit.distance < closestHit.distance)
-                {
+            foreach (var hit in hits) {
+                if (IsHitValid(hit) && hit.distance < closestHit.distance) {
                     foundHit = true;
                     closestHit = hit;
                 }
             }
 
-            if (foundHit)
-            {
+            if (foundHit) {
                 // Handle case of casting while already inside a collider
-                if(closestHit.distance <= 0f)
-                {
+                if (closestHit.distance <= 0f) {
                     closestHit.point = root.position;
                     closestHit.normal = -transform.forward;
                 }
@@ -178,60 +160,58 @@ public class ProjectileStandard : MonoBehaviour
         m_LastRootPosition = root.position;
     }
 
-    bool IsHitValid(RaycastHit hit)
-    {
+    bool IsHitValid(RaycastHit hit) {
         // ignore hits with an ignore component
-        if(hit.collider.GetComponent<IgnoreHitDetection>())
-        {
+        if (hit.collider.GetComponent<IgnoreHitDetection>()) {
             return false;
         }
 
         // ignore hits with triggers that don't have a Damageable component
-        if(hit.collider.isTrigger && hit.collider.GetComponent<Damageable>() == null)
-        {
+        if (hit.collider.isTrigger && hit.collider.GetComponent<Damageable>() == null) {
             return false;
         }
 
         // ignore hits with specific ignored colliders (self colliders, by default)
-        if (m_IgnoredColliders != null && m_IgnoredColliders.Contains(hit.collider))
-        {
+        if (m_IgnoredColliders != null && m_IgnoredColliders.Contains(hit.collider)) {
             return false;
         }
 
         return true;
     }
 
-    void OnHit(Vector3 point, Vector3 normal, Collider collider)
-    { 
+    void OnHit(Vector3 point, Vector3 normal, Collider collider) {
         // damage
-        if (areaOfDamage)
-        {
+        if (areaOfDamage) {
             // area damage
             areaOfDamage.InflictDamageInArea(damage, point, hittableLayers, k_TriggerInteraction, m_ProjectileBase.owner);
-        }
-        else
-        {
+        } else {
             // point damage
             Damageable damageable = collider.GetComponent<Damageable>();
-            if (damageable)
-            {
+            if (damageable) {
                 damageable.InflictDamage(damage, false, m_ProjectileBase.owner);
+            }
+
+            // can shoot certain buttons to trigger them
+            PunchButton button = collider.GetComponent<PunchButton>();
+            // if (button == null) {
+            //     button = collider.GetComponentInChildren<PunchButton>();
+            // }
+
+            if (button != null) {
+                button.PressButton();
             }
         }
 
         // impact vfx
-        if (impactVFX)
-        {
+        if (impactVFX) {
             GameObject impactVFXInstance = Instantiate(impactVFX, point + (normal * impactVFXSpawnOffset), Quaternion.LookRotation(normal));
-            if (impactVFXLifetime > 0)
-            {
+            if (impactVFXLifetime > 0) {
                 Destroy(impactVFXInstance.gameObject, impactVFXLifetime);
             }
         }
 
         // impact sfx
-        if (impactSFXClip)
-        {
+        if (impactSFXClip) {
             AudioUtility.CreateSFX(impactSFXClip, point, AudioUtility.AudioGroups.Impact, 1f, 3f);
         }
 
@@ -239,8 +219,7 @@ public class ProjectileStandard : MonoBehaviour
         Destroy(this.gameObject);
     }
 
-    private void OnDrawGizmosSelected()
-    {
+    private void OnDrawGizmosSelected() {
         Gizmos.color = radiusColor;
         Gizmos.DrawSphere(transform.position, radius);
     }
