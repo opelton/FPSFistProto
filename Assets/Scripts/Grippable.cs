@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 public class Grippable : MonoBehaviour {
-    public enum UseType { Hold, Consumable }
+    public enum UseType { Hold, Consumable, Reusable }
     public UseType useType = UseType.Hold;
     [SerializeField] Transform gripAnchor;
     public bool _breakable = false;

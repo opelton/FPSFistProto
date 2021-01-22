@@ -105,7 +105,8 @@ public class PlayerGripManager : MonoBehaviour {
 
     void UpdateUseInput(bool useButtonDown, bool useButtonHeld) {
         // potion, etc
-        if (_currentlyGrippedThing.useType == Grippable.UseType.Consumable) {
+        if (_currentlyGrippedThing.useType == Grippable.UseType.Consumable ||
+            _currentlyGrippedThing.useType == Grippable.UseType.Reusable) {
             if (useButtonDown) {
                 BeginUseConsumable();
             }
@@ -294,9 +295,11 @@ public class PlayerGripManager : MonoBehaviour {
         _currentlyGrippedThing.UseItem();
         MoveFistTo(_gripPositionDefault, _cooldownTime);
 
-        Destroy(_currentlyGrippedThing.gameObject);
-        _currentlyGrippedThing = null;
-        _playerWeaponsManager.SetAimBlock(false);
+        if (_currentlyGrippedThing.useType != Grippable.UseType.Reusable) {
+            Destroy(_currentlyGrippedThing.gameObject);
+            _currentlyGrippedThing = null;
+            _playerWeaponsManager.SetAimBlock(false);
+        }
         _gripMotionState = GripMotionState.Ready;
     }
 

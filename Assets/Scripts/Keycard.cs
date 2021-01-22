@@ -1,0 +1,58 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.Events;
+
+public class Keycard : MonoBehaviour {
+    public UnityEvent onButtonPressed;
+    [SerializeField] Transform _buttonTransform;
+    [SerializeField] Renderer _lightRenderer;
+    [SerializeField] Transform _buttonUpPosition;
+    [SerializeField] Transform _buttonDownPosition;
+    [SerializeField] float _buttonTravelTime;
+    [SerializeField] Ease _buttonEase = Ease.InCubic;
+    [SerializeField, ColorUsage(false, true)] Color _pressedLightColor = Color.white;
+    [SerializeField, ColorUsage(false, true)] Color _readyLightColor = Color.grey;
+    bool _buttonReady = true;
+
+    void OnEnable() {
+        _lightRenderer.material.color = _buttonReady ? _readyLightColor : _pressedLightColor;
+    }
+
+    void Awake() {
+        gameObject.GetComponent<Grippable>().onUsed.AddListener(TryPushButton);
+    }
+
+    public void TryPushButton() {
+        if (_buttonReady) {
+            ButtonDown();
+        }
+    }
+
+    void ButtonDown() {
+        _buttonReady = false;
+        _lightRenderer.material.color = _pressedLightColor;
+
+        _buttonTransform.DOLocalMove(_buttonDownPosition.localPosition, _buttonTravelTime)
+            .SetEase(_buttonEase)
+            .OnComplete(DoButtonPress);
+    }
+
+    void DoButtonPress() {
+        onButtonPressed?.Invoke();
+        ButtonUp();
+    }
+
+    void ButtonUp() {
+
+        _buttonTransform.DOLocalMove(_buttonUpPosition.localPosition, _buttonTravelTime)
+            .SetEase(_buttonEase)
+            .OnComplete(ReadyButton);
+    }
+
+    void ReadyButton() {
+        _lightRenderer.material.color = _readyLightColor;
+        _buttonReady = true;
+    }
+}
