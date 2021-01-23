@@ -287,19 +287,23 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void DoUseConsumable() {
+        _currentlyGrippedThing.UseItem();
+
         MoveFistTo(_gripPositionUseTwist, _useTime / 2)
             .OnComplete(() => EndUseConsumable());
     }
 
     void EndUseConsumable() {
-        _currentlyGrippedThing.UseItem();
-        MoveFistTo(_gripPositionDefault, _cooldownTime);
-
+        //_currentlyGrippedThing.UseItem();
+        
         if (_currentlyGrippedThing.useType != Grippable.UseType.Reusable) {
             Destroy(_currentlyGrippedThing.gameObject);
             _currentlyGrippedThing = null;
             _playerWeaponsManager.SetAimBlock(false);
         }
+
+        MoveFistTo(_gripPositionDefault, _cooldownTime);
+
         _gripMotionState = GripMotionState.Ready;
     }
 
