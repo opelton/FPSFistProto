@@ -124,6 +124,7 @@ GameObject:
   - component: {fileID: 3510086178936520874}
   - component: {fileID: 8572858336516124629}
   - component: {fileID: 8347462797573159857}
+  - component: {fileID: 322124465319023042}
   m_Layer: 0
   m_Name: DoorBarrier
   m_TagString: Untagged
@@ -420,3 +421,19 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!208 &322124465319023042
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5969070971927698602}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
