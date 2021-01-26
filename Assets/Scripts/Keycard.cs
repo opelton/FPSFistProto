@@ -30,7 +30,7 @@ public class Keycard : MonoBehaviour {
         _audioSource = GetComponent<AudioSource>();
     }
 
-    public void TryPushButton() {
+    public void TryPushButton(GameObject gripper) {
         if (_buttonReady) {
             ButtonDown();
         }

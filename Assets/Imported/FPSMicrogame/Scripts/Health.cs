@@ -13,7 +13,7 @@ public class Health : MonoBehaviour
     public UnityAction onDie;
 
     public float currentHealth { get; set; }
-    public bool invincible { get; set; }
+    public bool invincible = false;
     public bool canPickup() => currentHealth < maxHealth;
 
     public float getRatio() => currentHealth / maxHealth;
@@ -57,6 +57,9 @@ public class Health : MonoBehaviour
         }
 
         HandleDeath();
+    }
+
+    public void BlockDamage(float damage, GameObject damageSource, Vector3 damagePosition) {
     }
 
     public void Kill()

@@ -27,13 +27,20 @@ public class PlayerGripManager : MonoBehaviour {
     [SerializeField] float _useTime = .4f;
     [SerializeField] AnimationCurve _attackCurve = new AnimationCurve();
 
+    [Header("Fist Recoil")]
+    [Tooltip("This will affect how fast the recoil moves the fist, the bigger the value, the fastest")]
+    public float recoilSharpness = 50f;
+    [Tooltip("Maximum distance the recoil can affect the fist")]
+    public float maxRecoilDistance = 0.5f;
+    [Tooltip("How fast the weapon goes back to it's original position after the recoil is finished")]
+    public float recoilRestitutionSharpness = 10f;
+
     // grip privates
     Grippable _currentlyGrippedThing;
-
-    // TODO -- this doesn't allow for stored rotation
     Vector3 _mainSocketLocalPosition = Vector3.zero; // main target for tweened animation
-    Vector3 _mainSocketBobLocalPosition = Vector3.zero; // NYI
-    Vector3 _mainSocketRecoilLocalPosition = Vector3.zero; // NYI
+    Vector3 _mainSocketBobLocalPosition = Vector3.zero;
+    Vector3 _mainSocketRecoilLocalPosition = Vector3.zero;
+    Vector3 m_AccumulatedRecoil = Vector3.zero;
     //bool _fistInMotion = false; // can't perform other actions if busy
     GripMotionState _gripMotionState = GripMotionState.Ready;
 
@@ -41,6 +48,7 @@ public class PlayerGripManager : MonoBehaviour {
     PlayerInputHandler m_InputHandler;
     PlayerWeaponsManager _playerWeaponsManager;
     PlayerCharacterController _playerController;
+    Damageable _damage;
 
     // etc
     public bool IsEmptyHanded { get { return _currentlyGrippedThing == null; } }
@@ -55,6 +63,10 @@ public class PlayerGripManager : MonoBehaviour {
         _playerController = GetComponent<PlayerCharacterController>();
         DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, PlayerGripManager>(_playerController, this, gameObject);
 
+        _damage = GetComponent<Damageable>();
+        DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, Damageable>(_damage, this, gameObject);
+
+        _damage.onDamageBlocked.AddListener(RecoilFist);
         _mainSocketLocalPosition = _gripPositionDefault.localPosition;
     }
 
@@ -98,9 +110,28 @@ public class PlayerGripManager : MonoBehaviour {
 
     // Update various animated features in LateUpdate because it needs to override the animated arm position
     void LateUpdate() {
-        // TODO -- bob + recoil
+        // TODO -- movement bob
+        UpdateGripRecoil();
+
         // Set final weapon socket position based on all the combined animation influences
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
+    }
+
+    void RecoilFist(float recoilForce) {
+        m_AccumulatedRecoil += Vector3.back * recoilForce;
+        m_AccumulatedRecoil = Vector3.ClampMagnitude(m_AccumulatedRecoil, maxRecoilDistance);
+    }
+
+    void UpdateGripRecoil() {
+        // if the accumulated recoil is further away from the current position, make the current position move towards the recoil target
+        if (_mainSocketRecoilLocalPosition.z >= m_AccumulatedRecoil.z * 0.99f) {
+            _mainSocketRecoilLocalPosition = Vector3.Lerp(_mainSocketRecoilLocalPosition, m_AccumulatedRecoil, recoilSharpness * Time.deltaTime);
+        }
+        // otherwise, move recoil position to make it recover towards its resting pose
+        else {
+            _mainSocketRecoilLocalPosition = Vector3.Lerp(_mainSocketRecoilLocalPosition, Vector3.zero, recoilRestitutionSharpness * Time.deltaTime);
+            m_AccumulatedRecoil = _mainSocketRecoilLocalPosition;
+        }
     }
 
     void UpdateUseInput(bool useButtonDown, bool useButtonHeld) {
@@ -111,11 +142,16 @@ public class PlayerGripManager : MonoBehaviour {
                 BeginUseConsumable();
             }
         }
+
         // shield, etc
         else if (_currentlyGrippedThing.useType == Grippable.UseType.Hold) {
-            if (useButtonHeld) {
+            // can start using if ready
+            if (_gripMotionState == GripMotionState.Ready && useButtonDown) {
                 BeginUseHold();
-            } else {
+            }
+
+            // can stop using if lifting up
+            else if (_gripMotionState == GripMotionState.LiftingUp && !useButtonHeld) {
                 EndUseHold();
             }
         }
@@ -221,7 +257,7 @@ public class PlayerGripManager : MonoBehaviour {
         gripped.SetLayerMask(_playerWeaponsManager.GetWeaponLayerIndex());
 
         // gripped thing reacts to this
-        gripped.BecomeGripped();
+        gripped.BecomeGripped(_playerController.gameObject);
 
         // play a short pickup motion
         TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f);
@@ -268,16 +304,22 @@ public class PlayerGripManager : MonoBehaviour {
 
     // Tweening stuff
     void BeginUseHold() {
+        // feels more responsive to begin immediately
         _gripMotionState = GripMotionState.InMotion;
+        _currentlyGrippedThing.BeginUseHold();
         MoveFistTo(_gripPositionUseHold, _punchTime)
-            .OnComplete(() => _gripMotionState = GripMotionState.LiftingUp);
+            .OnComplete(() => {
+                _gripMotionState = GripMotionState.LiftingUp;
+            });
     }
 
     void EndUseHold() {
-        if (_gripMotionState == GripMotionState.LiftingUp) {
-            MoveFistTo(_gripPositionDefault, _cooldownTime)
-                .OnComplete(() => _gripMotionState = GripMotionState.Ready);
-        }
+        _gripMotionState = GripMotionState.InMotion;
+        MoveFistTo(_gripPositionDefault, _cooldownTime)
+            .OnComplete(() => {
+                _currentlyGrippedThing.EndUseHold();
+                _gripMotionState = GripMotionState.Ready;
+            });
     }
 
     void BeginUseConsumable() {
@@ -295,7 +337,7 @@ public class PlayerGripManager : MonoBehaviour {
 
     void EndUseConsumable() {
         //_currentlyGrippedThing.UseItem();
-        
+
         if (_currentlyGrippedThing.useType != Grippable.UseType.Reusable) {
             Destroy(_currentlyGrippedThing.gameObject);
             _currentlyGrippedThing = null;

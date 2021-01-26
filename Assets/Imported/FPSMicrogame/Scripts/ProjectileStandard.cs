@@ -188,15 +188,12 @@ public class ProjectileStandard : MonoBehaviour {
             // point damage
             Damageable damageable = collider.GetComponent<Damageable>();
             if (damageable) {
-                damageable.InflictDamage(damage, false, m_ProjectileBase.owner);
+                damageable.InflictDamage(damage, false, m_ProjectileBase.owner, point);
             }
 
+            // TODO -- fix dependency, projectiles shouldn't have to know about button punching rules
             // can shoot certain buttons to trigger them
             PunchButton button = collider.GetComponent<PunchButton>();
-            // if (button == null) {
-            //     button = collider.GetComponentInChildren<PunchButton>();
-            // }
-
             if (button != null) {
                 button.PressButton();
             }

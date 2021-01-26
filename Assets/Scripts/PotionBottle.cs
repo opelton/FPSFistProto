@@ -9,7 +9,7 @@ public class PotionBottle : MonoBehaviour {
         _root.onUsed.AddListener(SplashPotion);
     }
 
-    public void SplashPotion() { 
+    public void SplashPotion(GameObject gripper) { 
         Instantiate(onUsedFX, transform.position, transform.rotation);
     }
 }

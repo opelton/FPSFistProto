@@ -1,12 +1,17 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[System.Serializable]
+public class GameObjectEvent : UnityEvent<GameObject> { }
+
 public class Grippable : MonoBehaviour {
     public enum UseType { Hold, Consumable, Reusable }
     public UseType useType = UseType.Hold;
     [SerializeField] Transform gripAnchor;
     public bool _breakable = false;
-    [HideInInspector] public UnityEvent onUsed;
+    [HideInInspector] public GameObjectEvent onUsed;
+    [HideInInspector] public GameObjectEvent onUseHeldBegin;
+    [HideInInspector] public GameObjectEvent onUseHeldEnd;
     public Transform gripPoint { get { return gripAnchor != null ? gripAnchor : gameObject.transform; } }
 
     Collider _collider;
@@ -14,6 +19,7 @@ public class Grippable : MonoBehaviour {
     RigidbodyCopy _storedBody;
     int _storedLayerMask;
     bool _thrown;
+    GameObject _gripper;
 
     void Start() {
         _collider = GetComponent<Collider>();
@@ -21,7 +27,7 @@ public class Grippable : MonoBehaviour {
         _storedLayerMask = gameObject.layer;
     }
 
-    public void BecomeGripped() {
+    public void BecomeGripped(GameObject gripper) {
         _collider.enabled = false;
 
         // save a copy of the existing rigidbody and delete it
@@ -31,9 +37,12 @@ public class Grippable : MonoBehaviour {
             Destroy(_body);
             _body = null;
         }
+
+        _gripper = gripper;
     }
 
     public void UnGrip() {
+        _gripper = null;
         _collider.enabled = true;
         if (_storedBody != null) {
             _body = _storedBody.CopyTo(gameObject);
@@ -52,6 +61,14 @@ public class Grippable : MonoBehaviour {
         Throw(direction, force);
     }
 
+    public void BeginUseHold() {
+        onUseHeldBegin.Invoke(_gripper);
+    }
+
+    public void EndUseHold() {
+        onUseHeldEnd.Invoke(_gripper);
+    }
+
     void SmashItem() {
         UseItem();
         Destroy(gameObject);
@@ -59,7 +76,7 @@ public class Grippable : MonoBehaviour {
 
     public void UseItem() {
         if (onUsed != null) {
-            onUsed.Invoke();
+            onUsed.Invoke(_gripper);
         }
     }
 

@@ -35,7 +35,7 @@ public class DamageArea : MonoBehaviour
         foreach (Damageable uniqueDamageable in uniqueDamagedHealths.Values)
         {
             float distance = Vector3.Distance(uniqueDamageable.transform.position, transform.position);
-            uniqueDamageable.InflictDamage(damage * damageRatioOverDistance.Evaluate(distance / areaOfEffectDistance), true, owner);
+            uniqueDamageable.InflictDamage(damage * damageRatioOverDistance.Evaluate(distance / areaOfEffectDistance), true, owner, center);
         }
     }
 
