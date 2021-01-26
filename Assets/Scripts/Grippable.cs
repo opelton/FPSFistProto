@@ -12,6 +12,7 @@ public class Grippable : MonoBehaviour {
     [HideInInspector] public GameObjectEvent onUsed;
     [HideInInspector] public GameObjectEvent onUseHeldBegin;
     [HideInInspector] public GameObjectEvent onUseHeldEnd;
+    [HideInInspector] public UnityEvent onSmashed;
     public Transform gripPoint { get { return gripAnchor != null ? gripAnchor : gameObject.transform; } }
 
     Collider _collider;
@@ -70,7 +71,7 @@ public class Grippable : MonoBehaviour {
     }
 
     void SmashItem() {
-        UseItem();
+        onSmashed.Invoke();
         Destroy(gameObject);
     }
 
