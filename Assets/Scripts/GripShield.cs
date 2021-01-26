@@ -12,9 +12,9 @@ public class GripShield : MonoBehaviour {
         _gripBase.onUseHeldEnd.AddListener(EndBlocking);
     }
 
+    // TODO -- damageable should stay simple, block should work some other way
     void BeginBlocking(GameObject gripper) {
         var dmg = gripper.GetComponent<Damageable>();
-        Debug.Log(gripper.name);
         dmg._directionalBlock = true;
         dmg._directionalBlockAngleMax = _protectionAngleMaxX;
         dmg._directionalBlockAngleMin = _protectionAngleMinX;

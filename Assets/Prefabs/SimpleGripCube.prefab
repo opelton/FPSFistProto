@@ -140,8 +140,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useType: 0
   gripAnchor: {fileID: 0}
+  _throwDamage: 25
   _breakable: 0
   onUsed:
+    m_PersistentCalls:
+      m_Calls: []
+  onUseHeldBegin:
+    m_PersistentCalls:
+      m_Calls: []
+  onUseHeldEnd:
+    m_PersistentCalls:
+      m_Calls: []
+  onSmashed:
     m_PersistentCalls:
       m_Calls: []
 --- !u!54 &827085542751143414

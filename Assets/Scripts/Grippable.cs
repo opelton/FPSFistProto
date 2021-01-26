@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,6 +9,7 @@ public class Grippable : MonoBehaviour {
     public enum UseType { Hold, Consumable, Reusable }
     public UseType useType = UseType.Hold;
     [SerializeField] Transform gripAnchor;
+    [SerializeField] float _throwDamage = 10f;
     public bool _breakable = false;
     [HideInInspector] public GameObjectEvent onUsed;
     [HideInInspector] public GameObjectEvent onUseHeldBegin;
@@ -92,33 +94,40 @@ public class Grippable : MonoBehaviour {
     }
 
     void OnCollisionEnter(Collision collision) {
-        if (_thrown && _breakable) {
-            SmashItem();
+        if (_thrown) {
 
-            // check for nearby button triggers to also flip
             var checkRadius = _collider.bounds.size.magnitude * 1.2f;
-            var overlaps = Physics.OverlapSphere(_collider.bounds.center, checkRadius);
 
-            foreach (Collider nearby in overlaps) {
-                if (nearby.gameObject.GetComponent<PunchButton>() != null) {
+            // button was nearby and in LOS to be effected
+            var unobstructedButtons = CheckSphereAndLOS<PunchButton>(_collider.bounds.center, checkRadius);
+            foreach (var button in unobstructedButtons) {
+                button.PressButton();
+            }
 
-                    // check unobstructed LOS
-                    if (Physics.Raycast(_collider.bounds.center, nearby.gameObject.transform.position - _collider.bounds.center, out RaycastHit hit)) {
-                        var button = hit.collider.GetComponent<PunchButton>();
-
-                        // we hit the button as expected, nothing obstructing
-                        if (button != null) {
-                            button.PressButton();
-                        }
-                        // else { 
-                        //     Debug.Log("Button within range but LOS was obstructed!");
-                        // }
-                    }
+            // direct impact
+            var damageable = collision.gameObject.GetComponent<Damageable>();
+            if (damageable != null) {
+                Debug.Log("Direct damage");
+                damageable.InflictDamage(_throwDamage, false, _gripper, _collider.bounds.center);
+            }
+            // splash
+            else {
+                var visibleDamage = CheckSphereAndLOS<Damageable>(_collider.bounds.center, checkRadius);
+                foreach (var dmg in visibleDamage) {
+                    Debug.Log("Splash damage");
+                    dmg.InflictDamage(_throwDamage, true, _gripper, _collider.bounds.center);
                 }
             }
+
+            if (_breakable) {
+                SmashItem();
+            }
+
+            _thrown = false;
         }
     }
 
+    // TODO -- some grippables hit buttons through trigger, and some through direct collision... hmmm....
     void OnTriggerEnter(Collider other) {
         if (_thrown) {
             var button = other.gameObject.GetComponent<PunchButton>();
@@ -126,5 +135,28 @@ public class Grippable : MonoBehaviour {
                 button.PressButton();
             }
         }
+    }
+
+    T[] CheckSphereAndLOS<T>(Vector3 center, float radius) where T : MonoBehaviour {
+        var overlaps = Physics.OverlapSphere(center, radius);
+        List<T> losVisible = new List<T>();
+
+        foreach (Collider nearby in overlaps) {
+            var targetComponent = nearby.gameObject.GetComponent<T>();
+            if (targetComponent != null) {
+
+                // check unobstructed LOS
+                if (Physics.Raycast(center, targetComponent.transform.position - center, out RaycastHit hit)) {
+                    var unobstructed = hit.collider.GetComponent<T>();
+
+                    // add confirmed to 
+                    if (unobstructed != null) {
+                        losVisible.Add(targetComponent);
+                    }
+                }
+            }
+        }
+
+        return losVisible.ToArray();
     }
 }

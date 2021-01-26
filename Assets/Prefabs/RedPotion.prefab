@@ -1120,6 +1120,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   useType: 1
   gripAnchor: {fileID: 6229545109987748939}
+  _throwDamage: 100
   _breakable: 1
   onUsed:
     m_PersistentCalls:
@@ -1135,6 +1136,15 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  onUseHeldBegin:
+    m_PersistentCalls:
+      m_Calls: []
+  onUseHeldEnd:
+    m_PersistentCalls:
+      m_Calls: []
+  onSmashed:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!54 &6580212093718860585
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1176,8 +1186,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 980606038b8e5ec44aeb4c0126b8980a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  onUsedFX: {fileID: 3028266238697970307, guid: 8e87928214d451a4c9b8dc38cecee2e0,
+  onUsedFX: {fileID: 8950624839484268180, guid: 2b9a2695fde84a54c85d9ed0eb3b1318,
     type: 3}
+  _healAmount: 10
 --- !u!1 &6229545109987748916
 GameObject:
   m_ObjectHideFlags: 0

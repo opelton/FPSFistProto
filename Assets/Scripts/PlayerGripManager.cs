@@ -5,6 +5,7 @@ public class PlayerGripManager : MonoBehaviour {
     public enum GripMotionState { Ready, InMotion, LiftingUp }
 
     [SerializeField] LayerMask _gripLayer;
+    [SerializeField] LayerMask _attackLayer;
 
     [Header("Grip sockets")]
     [SerializeField] Transform _gripSocket;
@@ -35,6 +36,12 @@ public class PlayerGripManager : MonoBehaviour {
     [Tooltip("How fast the weapon goes back to it's original position after the recoil is finished")]
     public float recoilRestitutionSharpness = 10f;
 
+    [Header("Punching")]
+    [SerializeField] GameObject _punchFx;
+    [SerializeField] AudioClip _punchSfx;
+    [SerializeField] float _punchDamage = 50f;
+    [SerializeField] float _punchKnockback = 10f;
+
     // grip privates
     Grippable _currentlyGrippedThing;
     Vector3 _mainSocketLocalPosition = Vector3.zero; // main target for tweened animation
@@ -49,6 +56,7 @@ public class PlayerGripManager : MonoBehaviour {
     PlayerWeaponsManager _playerWeaponsManager;
     PlayerCharacterController _playerController;
     Damageable _damage;
+    AudioSource _audio;
 
     // etc
     public bool IsEmptyHanded { get { return _currentlyGrippedThing == null; } }
@@ -65,6 +73,9 @@ public class PlayerGripManager : MonoBehaviour {
 
         _damage = GetComponent<Damageable>();
         DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, Damageable>(_damage, this, gameObject);
+
+        _audio = GetComponent<AudioSource>();
+        DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, AudioSource>(_audio, this, gameObject);
 
         _damage.onDamageBlocked.AddListener(RecoilFist);
         _mainSocketLocalPosition = _gripPositionDefault.localPosition;
@@ -158,7 +169,7 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     bool CanThrow() {
-        return _gripMotionState == GripMotionState.Ready && !_playerController.isCrouching;
+        return /*_gripMotionState == GripMotionState.Ready &&*/ !_playerController.isCrouching;
     }
 
     bool CanPunch() {
@@ -187,24 +198,25 @@ public class PlayerGripManager : MonoBehaviour {
         _playerWeaponsManager.SetAimBlock(false);
     }
 
-    void TryPressButtonInGrabArea() {
-        var button = SearchRaycast<PunchButton>();
+    PunchButton TryPressButtonInGrabArea() {
+        var button = SearchRaycast<PunchButton>(_gripLayer);
         if (button != null) {
             button.PressButton();
         }
+        return button;
     }
 
     Grippable FindGrippableInGrabArea() {
-        return SearchRaycast<Grippable>();
+        return SearchRaycast<Grippable>(_gripLayer);
     }
 
-    T SearchRaycast<T>() where T : MonoBehaviour {
+    T SearchRaycast<T>(LayerMask layer) where T : MonoBehaviour {
         var lookOrigin = _playerWeaponsManager.lookPosition;
         var lookDirection = _playerWeaponsManager.shotDirection;
 
         // highest priority, item is directly under the crosshairs
         if (Physics.Raycast(lookOrigin, lookDirection,
-                out RaycastHit rayHit, _gripRange, _gripLayer)) {
+                out RaycastHit rayHit, _gripRange, layer)) {
 
             var raySearch = rayHit.collider.gameObject.GetComponent<T>();
             if (raySearch != null) {
@@ -219,7 +231,7 @@ public class PlayerGripManager : MonoBehaviour {
         var sphereDistance = Mathf.Max(_gripRange - _gripRadius, 0);
 
         // if nothing is raycast, check a small distance on all sides for a nearby item
-        if (Physics.SphereCast(sphereCenter, _gripRadius, lookDirection, out RaycastHit sphereHit, sphereDistance, _gripLayer)) {
+        if (Physics.SphereCast(sphereCenter, _gripRadius, lookDirection, out RaycastHit sphereHit, sphereDistance, layer)) {
 
             var sphereSearch = sphereHit.collider.gameObject.GetComponent<T>();
             if (sphereSearch != null) {
@@ -231,9 +243,26 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void ForwardPunch() {
-        var buttonTarget = SearchRaycast<PunchButton>();
-        if (buttonTarget != null) {
-            buttonTarget.PressButton();
+        var target = SearchRaycast<Damageable>(_attackLayer);
+        if (target != null) {
+            PunchFx(target.transform.position);
+            target.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
+
+        } else {
+            var button = TryPressButtonInGrabArea();
+            if(button != null) { 
+                PunchFx(button.transform.position);
+            }
+        }
+    }
+
+    void PunchFx(Vector3 punchPos) {
+        if (_audio && _punchSfx) {
+            _audio.PlayOneShot(_punchSfx);
+        }
+
+        if (_punchFx) {
+            Instantiate(_punchFx, punchPos, Quaternion.identity);
         }
     }
 
