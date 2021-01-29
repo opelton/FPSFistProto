@@ -213,11 +213,18 @@ public class PlayerGripManager : MonoBehaviour {
         if (target != null) {
             PunchFx(target.transform.position);
             target.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
-
         } else {
             var button = TryPressButtonInGrabArea();
             if (button != null) {
                 PunchFx(button.transform.position);
+
+            // HACK! This should go away once the bug with potion bottles registering damage is fixed (probably needs layer organization)
+            } else {
+                var bottle = SearchRaycasts<Damageable>(_gripLayer);
+                if (bottle != null) {
+                    PunchFx(bottle.transform.position);
+                    bottle.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
+                }
             }
         }
     }

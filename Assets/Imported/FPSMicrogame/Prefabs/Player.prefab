@@ -23,13 +23,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 160583965156864741}
-  m_LocalRotation: {x: 0, y: -0.10452837, z: 0, w: 0.9945219}
+  m_LocalRotation: {x: 0, y: -0.30070576, z: 0, w: 0.953717}
   m_LocalPosition: {x: -1.22, y: -0.44, z: 1.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 5899216663940666332}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: -12, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -35, z: 0}
 --- !u!1 &608319999114368957
 GameObject:
   m_ObjectHideFlags: 0
@@ -390,6 +390,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   criticalHealthRatio: 0.3
+  invincible: 0
 --- !u!114 &822933660269432026
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -471,6 +472,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damageMultiplier: 1
   sensibilityToSelfdamage: 0.25
+  _directionalBlock: 0
+  _directionalBlockAngleMin: -45
+  _directionalBlockAngleMax: 45
+  onDamageBlocked:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!82 &822933660269432097
 AudioSource:
   m_ObjectHideFlags: 0
@@ -583,6 +590,9 @@ MonoBehaviour:
   _gripLayer:
     serializedVersion: 2
     m_Bits: 2048
+  _attackLayer:
+    serializedVersion: 2
+    m_Bits: 1
   _gripSocket: {fileID: 582346741135160929}
   _gripPositionDefault: {fileID: 6296096094775861833}
   _gripPositionDown: {fileID: 6089308477139903935}
@@ -595,8 +605,8 @@ MonoBehaviour:
   _throwForce: 25
   _throwTime: 0.2
   _gripRange: 3
+  _gripRadius: 0.5
   _punchTime: 0.2
-  _punchWindupTime: 0.1
   _cooldownTime: 0.1
   _useTime: 0.4
   _attackCurve:
@@ -623,6 +633,13 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  recoilSharpness: 50
+  maxRecoilDistance: 0.5
+  recoilRestitutionSharpness: 10
+  _punchFx: {fileID: 100000, guid: f06e78284f831ae469c74624ab5d513b, type: 3}
+  _punchSfx: {fileID: 8300000, guid: a7fae22399a6e1d448dc0dd2210f1dac, type: 3}
+  _punchDamage: 50
+  _punchKnockback: 10
 --- !u!1 &822933660598288063
 GameObject:
   m_ObjectHideFlags: 0
@@ -1403,11 +1420,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8998289564705867000}
-  m_LocalRotation: {x: 0, y: -0.10452837, z: 0, w: 0.9945219}
+  m_LocalRotation: {x: 0, y: -0.30070576, z: 0, w: 0.953717}
   m_LocalPosition: {x: -1.22, y: -0.44, z: 1.22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 5765733557239857148}
   m_Father: {fileID: 5899216663940666332}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: -12, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -35, z: 0}
