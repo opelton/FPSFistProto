@@ -8,8 +8,8 @@ public class GripShield : MonoBehaviour {
 
     void Awake() {
         _gripBase = GetComponent<Grippable>();
-        _gripBase.onUseHeldBegin.AddListener(BeginBlocking);
-        _gripBase.onUseHeldEnd.AddListener(EndBlocking);
+        _gripBase.onActivatedBegin.AddListener(BeginBlocking);
+        _gripBase.onActivatedEnd.AddListener(EndBlocking);
     }
 
     // TODO -- damageable should stay simple, block should work some other way

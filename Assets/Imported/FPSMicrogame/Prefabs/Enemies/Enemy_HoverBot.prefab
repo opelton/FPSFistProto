@@ -151,7 +151,7 @@ MonoBehaviour:
   deathVFXSpawnPoint: {fileID: 381893446485871685}
   lootPrefab: {fileID: 2529580269645609534, guid: 9973c412032becb4ca116ca08be62edf,
     type: 3}
-  dropRate: 1
+  dropRate: 0.15
   pathReachingRangeColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   attackRangeColor: {r: 1, g: 0, b: 0, a: 1}
   detectionRangeColor: {r: 0, g: 0, b: 1, a: 1}
@@ -197,6 +197,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   criticalHealthRatio: 0.3
+  invincible: 0
 --- !u!114 &3464315327790461765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -523,6 +524,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damageMultiplier: 1
   sensibilityToSelfdamage: 0.5
+  _directionalBlock: 0
+  _directionalBlockAngleMin: -45
+  _directionalBlockAngleMax: 45
+  onDamageBlocked:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &7448957880145452174
 GameObject:
   m_ObjectHideFlags: 0

@@ -16,6 +16,8 @@ GameObject:
   - component: {fileID: 6580212093718860585}
   - component: {fileID: 7417780911836412511}
   - component: {fileID: 1814687654}
+  - component: {fileID: 1256624387777223698}
+  - component: {fileID: 617293531580878697}
   m_Layer: 11
   m_Name: RedPotion
   m_TagString: Untagged
@@ -1118,31 +1120,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f31d6d28e41f5ff48968b4835101a480, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useType: 1
+  _activationType: 0
   gripAnchor: {fileID: 6229545109987748939}
   _throwDamage: 100
-  _breakable: 1
-  onUsed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1814687654}
-        m_MethodName: SplashPotion
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  onUseHeldBegin:
+  onGrabbed:
     m_PersistentCalls:
       m_Calls: []
-  onUseHeldEnd:
+  onDropped:
     m_PersistentCalls:
       m_Calls: []
-  onSmashed:
+  onThrown:
+    m_PersistentCalls:
+      m_Calls: []
+  onThrowImpact:
+    m_PersistentCalls:
+      m_Calls: []
+  onActivatedBegin:
+    m_PersistentCalls:
+      m_Calls: []
+  onActivatedEnd:
     m_PersistentCalls:
       m_Calls: []
 --- !u!54 &6580212093718860585
@@ -1188,7 +1184,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   onUsedFX: {fileID: 8950624839484268180, guid: 2b9a2695fde84a54c85d9ed0eb3b1318,
     type: 3}
-  _healAmount: 10
+  _healAmount: 25
+--- !u!114 &1256624387777223698
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281915807647285046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9b0ce1bb69c96b49a7ac1098a7f5796, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageMultiplier: 1
+  sensibilityToSelfdamage: 0.5
+  _directionalBlock: 0
+  _directionalBlockAngleMin: -45
+  _directionalBlockAngleMax: 45
+  onDamageBlocked:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &617293531580878697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281915807647285046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e27364eefd6dd0341ba72a3bfc0d9727, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 1
+  criticalHealthRatio: 0.01
+  invincible: 0
 --- !u!1 &6229545109987748916
 GameObject:
   m_ObjectHideFlags: 0

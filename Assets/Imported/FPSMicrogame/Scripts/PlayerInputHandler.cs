@@ -143,10 +143,25 @@ public class PlayerInputHandler : MonoBehaviour {
         return false;
     }
 
+    public bool GetGripInputHeld() {
+        if (CanProcessInput()) {
+            return Input.GetButton(GameConstants.k_ButtonNameUse);
+        }
+        return false;
+    }
+
     public bool GetPunchInputDown() {
         if (CanProcessInput()) {
             return Input.GetButtonDown(GameConstants.k_ButtonNamePunch);
         }
+        return false;
+    }
+
+    public bool GetPunchInputHeld() {
+        if (CanProcessInput()) {
+            return Input.GetButton(GameConstants.k_ButtonNamePunch);
+        }
+
         return false;
     }
 

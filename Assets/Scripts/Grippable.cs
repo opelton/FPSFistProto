@@ -3,26 +3,34 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [System.Serializable]
-public class GameObjectEvent : UnityEvent<GameObject> { }
+public class GripActionEvent : UnityEvent<GameObject> { }
 
 public class Grippable : MonoBehaviour {
-    public enum UseType { Hold, Consumable, Reusable }
-    public UseType useType = UseType.Hold;
+    public enum ActivationType { Press, Hold }
+
+    [SerializeField] ActivationType _activationType = ActivationType.Press;
     [SerializeField] Transform gripAnchor;
     [SerializeField] float _throwDamage = 10f;
-    public bool _breakable = false;
-    [HideInInspector] public GameObjectEvent onUsed;
-    [HideInInspector] public GameObjectEvent onUseHeldBegin;
-    [HideInInspector] public GameObjectEvent onUseHeldEnd;
-    [HideInInspector] public UnityEvent onSmashed;
-    public Transform gripPoint { get { return gripAnchor != null ? gripAnchor : gameObject.transform; } }
 
+    [HideInInspector] public GripActionEvent onGrabbed;
+    [HideInInspector] public GripActionEvent onDropped;
+    [HideInInspector] public GripActionEvent onThrown;
+    [HideInInspector] public UnityEvent onThrowImpact;
+    [HideInInspector] public GripActionEvent onActivatedBegin;
+    [HideInInspector] public GripActionEvent onActivatedEnd;
+
+    // members
+    public Transform gripPoint => gripAnchor != null ? gripAnchor : gameObject.transform;
+    public ActivationType activationType => _activationType;
+
+    // privates
     Collider _collider;
     Rigidbody _body;
     RigidbodyCopy _storedBody;
+    LayerMask _hudLayerMask;
     int _storedLayerMask;
     bool _thrown;
-    GameObject _gripper;
+    GameObject _owner;
 
     void Start() {
         _collider = GetComponent<Collider>();
@@ -30,33 +38,34 @@ public class Grippable : MonoBehaviour {
         _storedLayerMask = gameObject.layer;
     }
 
-    public void BecomeGripped(GameObject gripper) {
-        _collider.enabled = false;
+    public void BecomeGripped(GameObject gripper, LayerMask hudLayer) {
+        _hudLayerMask = hudLayer;
+        OverrideLayerMask();
 
-        // save a copy of the existing rigidbody and delete it
-        // setting kinematic and disabling collisions DOES NOT disable it enough
-        if (_body != null) {
-            _storedBody = new RigidbodyCopy(_body);
-            Destroy(_body);
-            _body = null;
-        }
+        DeleteRigidbodies();
 
-        _gripper = gripper;
+        _owner = gripper;
+        onGrabbed.Invoke(_owner);
     }
 
     public void UnGrip() {
-        _gripper = null;
-        _collider.enabled = true;
-        if (_storedBody != null) {
-            _body = _storedBody.CopyTo(gameObject);
-        }
+        _owner = null;
+        RestoreRidigbodies();
         RestoreLayerMask();
     }
 
     public void Throw(Vector3 direction, float force) {
-        _body.velocity = direction * force;
+        ApplyForce(direction, force);
+
+        // the spin looks neat for throwing stuff
         _body.angularVelocity = transform.right * force;
         _thrown = true;
+
+        onThrown.Invoke(_owner);
+    }
+
+    public void ApplyForce(Vector3 direction, float force) {
+        _body.velocity += direction * force;
     }
 
     public void ThrowFrom(Vector3 position, Vector3 direction, float force) {
@@ -64,70 +73,93 @@ public class Grippable : MonoBehaviour {
         Throw(direction, force);
     }
 
-    public void BeginUseHold() {
-        onUseHeldBegin.Invoke(_gripper);
-    }
-
-    public void EndUseHold() {
-        onUseHeldEnd.Invoke(_gripper);
-    }
-
-    void SmashItem() {
-        onSmashed.Invoke();
+    public void DestroyItem() {
         Destroy(gameObject);
     }
 
-    public void UseItem() {
-        if (onUsed != null) {
-            onUsed.Invoke(_gripper);
-        }
+    public void ThrowImpact() {
+        onThrowImpact.Invoke();
     }
 
-    public void SetLayerMask(int layerIndex) {
+    public void ActivateBegin() {
+        onActivatedBegin.Invoke(_owner);
+    }
+
+    public void ActivateEnd() {
+        onActivatedEnd.Invoke(_owner);
+    }
+
+    void SetLayerMask(int layerIndex) {
         foreach (Transform t in gameObject.GetComponentsInChildren<Transform>(true)) {
             t.gameObject.layer = layerIndex;
         }
+    }
+
+    void OverrideLayerMask() {
+        SetLayerMask(_hudLayerMask);
     }
 
     void RestoreLayerMask() {
         SetLayerMask(_storedLayerMask);
     }
 
+    // setting kinematic and disabling collisions DOES NOT disable rigidbody enough
+    void DeleteRigidbodies() {
+        _collider.enabled = false;
+
+        // save a copy of the existing rigidbody and delete it
+        if (_body != null) {
+            _storedBody = new RigidbodyCopy(_body);
+            Destroy(_body);
+            _body = null;
+        }
+    }
+
+    void RestoreRidigbodies() {
+        _collider.enabled = true;
+
+        if (_storedBody != null) {
+            _body = _storedBody.CopyTo(gameObject);
+        }
+    }
+
+    // TODO -- some grippables hit buttons through trigger, and some through direct collision... hmmm....
     void OnCollisionEnter(Collision collision) {
         if (_thrown) {
 
-            var checkRadius = _collider.bounds.size.magnitude * 1.2f;
-
-            // button was nearby and in LOS to be effected
-            var unobstructedButtons = CheckSphereAndLOS<PunchButton>(_collider.bounds.center, checkRadius);
-            foreach (var button in unobstructedButtons) {
+            // flip buttons on direct contact
+            var button = collision.gameObject.GetComponent<PunchButton>();
+            if (button != null) {
                 button.PressButton();
-            }
+            } else {
+                // long items thrown directly at a button can hit the wall around it, do a sphere check to make it feel better
+                var checkRadius = GetMaxBoundsLength(_collider.bounds);
 
-            // direct impact
-            var damageable = collision.gameObject.GetComponent<Damageable>();
-            if (damageable != null) {
-                Debug.Log("Direct damage");
-                damageable.InflictDamage(_throwDamage, false, _gripper, _collider.bounds.center);
-            }
-            // splash
-            else {
-                var visibleDamage = CheckSphereAndLOS<Damageable>(_collider.bounds.center, checkRadius);
-                foreach (var dmg in visibleDamage) {
-                    Debug.Log("Splash damage");
-                    dmg.InflictDamage(_throwDamage, true, _gripper, _collider.bounds.center);
+                // button was nearby and in LOS to be effected
+                var unobstructedButtons = CheckSphereAndLOS<PunchButton>(_collider.bounds.center, checkRadius);
+                foreach (var losButton in unobstructedButtons) {
+                    losButton.PressButton();
                 }
             }
 
-            if (_breakable) {
-                SmashItem();
+            // direct impact, but watch out for players throwing boxes into their own faces
+            var damageable = collision.gameObject.GetComponent<Damageable>();
+            if (damageable != null && collision.gameObject.GetComponent<PlayerCharacterController>() == null) {
+                damageable.InflictDamage(_throwDamage, false, _owner, _collider.bounds.center);
             }
+
+            ThrowImpact();
 
             _thrown = false;
         }
     }
 
-    // TODO -- some grippables hit buttons through trigger, and some through direct collision... hmmm....
+    float GetMaxBoundsLength(Bounds bounds) {
+        var largest = Mathf.Max(bounds.size.x, bounds.size.y);
+        largest = Mathf.Max(largest, bounds.size.z);
+        return largest;
+    }
+
     void OnTriggerEnter(Collider other) {
         if (_thrown) {
             var button = other.gameObject.GetComponent<PunchButton>();

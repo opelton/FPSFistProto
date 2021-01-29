@@ -197,6 +197,12 @@ public class ProjectileStandard : MonoBehaviour {
             if (button != null) {
                 button.PressButton();
             }
+
+            // nudge grippables so they can be moved with bullets
+            Grippable grippable = collider.GetComponent<Grippable>();
+            if (grippable != null) {
+                grippable.ApplyForce(transform.forward, damage / 10f);
+            }
         }
 
         // impact vfx

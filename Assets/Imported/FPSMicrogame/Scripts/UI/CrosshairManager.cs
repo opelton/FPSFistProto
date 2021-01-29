@@ -22,7 +22,6 @@ public class CrosshairManager : MonoBehaviour {
 
         OnWeaponChanged(m_WeaponsManager.GetActiveWeapon());
         m_WeaponsManager.onSwitchedToWeapon += OnWeaponChanged;
-
     }
 
     void Update() {
@@ -72,11 +71,11 @@ public class CrosshairManager : MonoBehaviour {
         // make sure crosshairs are assigned
         if (m_CrosshairRectTransform == null) {
             m_CrosshairRectTransform = crosshairImage.GetComponent<RectTransform>();
-
-            // aim at a fixed location based on look position and shot direction (this differs from camera forward)
-            var aimPoint = m_WeaponsManager.lookPosition + m_WeaponsManager.shotDirection * 100f;
-            UpdateCrosshairScreenPosition(aimPoint);
         }
+
+        // aim at a fixed location based on look position and shot direction (this differs from camera forward)
+        var aimPoint = m_WeaponsManager.lookPosition + m_WeaponsManager.shotDirection * 100f;
+        UpdateCrosshairScreenPosition(aimPoint);
 
         UpdateCrosshairPointingAtEnemy(true);
     }

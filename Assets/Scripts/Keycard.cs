@@ -26,7 +26,7 @@ public class Keycard : MonoBehaviour {
     }
 
     void Awake() {
-        gameObject.GetComponent<Grippable>().onUsed.AddListener(TryPushButton);
+        gameObject.GetComponent<Grippable>().onActivatedBegin.AddListener(TryPushButton);
         _audioSource = GetComponent<AudioSource>();
     }
 

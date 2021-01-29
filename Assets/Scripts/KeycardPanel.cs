@@ -14,9 +14,11 @@ public class KeycardPanel : MonoBehaviour {
     [SerializeField] Renderer _keyBulb;
     AudioSource _audioSource;
     bool _panelReady = true;
+    float _startingPitch;
 
     void Awake() {
         _audioSource = GetComponent<AudioSource>();
+        _startingPitch = _audioSource.pitch;
     }
 
     public void KeycardPing(Vector3 keycardPos) {
@@ -24,8 +26,7 @@ public class KeycardPanel : MonoBehaviour {
 
         if (distance <= _unlockDistance) {
             KeyLightOn();
-        }
-        else { 
+        } else {
             PingLightOn();
         }
 
@@ -37,12 +38,15 @@ public class KeycardPanel : MonoBehaviour {
 
     IEnumerator DelayedPing(float distance) {
         yield return new WaitForSeconds(_pingDelay);
-        _audioSource.PlayOneShot(_pingSfx);
         _panelReady = true;
 
         if (distance <= _unlockDistance) {
             onDoorToggle.Invoke();
+            _audioSource.pitch = _startingPitch * 3;
+        } else {
+            _audioSource.pitch = _startingPitch;
         }
+        _audioSource.PlayOneShot(_pingSfx);
 
         PingLightOff();
         KeyLightOff();

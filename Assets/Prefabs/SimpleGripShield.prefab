@@ -915,19 +915,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f31d6d28e41f5ff48968b4835101a480, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useType: 0
+  _activationType: 1
   gripAnchor: {fileID: 3714996140468244985}
-  _breakable: 0
-  onUsed:
+  _throwDamage: 50
+  onGrabbed:
     m_PersistentCalls:
       m_Calls: []
-  onUseHeldBegin:
+  onDropped:
     m_PersistentCalls:
       m_Calls: []
-  onUseHeldEnd:
+  onThrown:
     m_PersistentCalls:
       m_Calls: []
-  onSmashed:
+  onThrowImpact:
+    m_PersistentCalls:
+      m_Calls: []
+  onActivatedBegin:
+    m_PersistentCalls:
+      m_Calls: []
+  onActivatedEnd:
     m_PersistentCalls:
       m_Calls: []
 --- !u!54 &3714996140566998662

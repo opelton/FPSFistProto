@@ -48,7 +48,6 @@ public class PlayerGripManager : MonoBehaviour {
     Vector3 _mainSocketBobLocalPosition = Vector3.zero;
     Vector3 _mainSocketRecoilLocalPosition = Vector3.zero;
     Vector3 m_AccumulatedRecoil = Vector3.zero;
-    //bool _fistInMotion = false; // can't perform other actions if busy
     GripMotionState _gripMotionState = GripMotionState.Ready;
 
     // dependencies 
@@ -72,50 +71,43 @@ public class PlayerGripManager : MonoBehaviour {
         DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, PlayerGripManager>(_playerController, this, gameObject);
 
         _damage = GetComponent<Damageable>();
-        DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, Damageable>(_damage, this, gameObject);
+        DebugUtility.HandleErrorIfNullGetComponent<Damageable, PlayerGripManager>(_damage, this, gameObject);
 
         _audio = GetComponent<AudioSource>();
-        DebugUtility.HandleErrorIfNullGetComponent<PlayerCharacterController, AudioSource>(_audio, this, gameObject);
+        DebugUtility.HandleErrorIfNullGetComponent<AudioSource, PlayerGripManager>(_audio, this, gameObject);
 
         _damage.onDamageBlocked.AddListener(RecoilFist);
         _mainSocketLocalPosition = _gripPositionDefault.localPosition;
     }
 
     void Update() {
-
         // empty handed
         if (IsEmptyHanded) {
-            if (m_InputHandler.GetGripInputDown()) { TryForwardGrab(); }
+            if (FistMotionIsReady()) {
+                // swing
+                if (m_InputHandler.GetPunchInputDown()) { BeginPunch(); }
+
+                if (m_InputHandler.GetGripInputDown()) { TryForwardGrab(); }
+            }
         }
 
         // gripped something
         else {
-            if (m_InputHandler.GetGripInputDown()) {
+            var useInputDown = m_InputHandler.GetGripInputDown();
+            var useInputHeld = m_InputHandler.GetGripInputHeld();
+            var gripInputDown = m_InputHandler.GetPunchInputDown();
+
+            if (gripInputDown) {
+
+                // set down if crouching
+                if (_playerController.isCrouching) { SetDownGrippedThing(); }
 
                 // throw it
-                if (CanThrow()) { ThrowGrippedThing(); }
-
-                // drop it
-                else { SetDownGrippedThing(); }
+                else { ThrowGrippedThing(); }
             }
 
-            // use it
-            else { UpdateUseInput(m_InputHandler.GetAimInputDown(), m_InputHandler.GetAimInputHeld()); }
-        }
-
-        // swing
-        if (CanPunch() && m_InputHandler.GetPunchInputDown()) {
-            BeginPunch();
-        }
-    }
-
-    void TryForwardGrab() {
-        // search for grabbable thing
-        var grippableThing = FindGrippableInGrabArea();
-        if (grippableThing != null) {
-            Grip(grippableThing);
-        } else {
-            TryPressButtonInGrabArea();
+            // punch button becomes context item-activate
+            else { UpdateUseInput(useInputDown, useInputHeld); }
         }
     }
 
@@ -126,6 +118,32 @@ public class PlayerGripManager : MonoBehaviour {
 
         // Set final weapon socket position based on all the combined animation influences
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
+    }
+
+    bool GrippingHoldType() {
+        return _currentlyGrippedThing.activationType == Grippable.ActivationType.Hold;
+    }
+
+    bool GrippingPressType() {
+        return _currentlyGrippedThing.activationType == Grippable.ActivationType.Press;
+    }
+
+    bool FistMotionIsLifting() {
+        return _gripMotionState == GripMotionState.LiftingUp;
+    }
+
+    bool FistMotionIsReady() {
+        return _gripMotionState == GripMotionState.Ready;
+    }
+
+    void TryForwardGrab() {
+        // search for grabbable thing
+        var grippableThing = FindGrippableInGrabArea();
+        if (grippableThing != null) {
+            Grip(grippableThing);
+        } else {
+            TryPressButtonInGrabArea();
+        }
     }
 
     void RecoilFist(float recoilForce) {
@@ -146,60 +164,40 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void UpdateUseInput(bool useButtonDown, bool useButtonHeld) {
-        // potion, etc
-        if (_currentlyGrippedThing.useType == Grippable.UseType.Consumable ||
-            _currentlyGrippedThing.useType == Grippable.UseType.Reusable) {
-            if (useButtonDown) {
-                BeginUseConsumable();
-            }
-        }
-
-        // shield, etc
-        else if (_currentlyGrippedThing.useType == Grippable.UseType.Hold) {
-            // can start using if ready
-            if (_gripMotionState == GripMotionState.Ready && useButtonDown) {
+        // press and hold to use item
+        if (GrippingHoldType()) {
+            if (FistMotionIsReady() && useButtonDown) {
                 BeginUseHold();
-            }
-
-            // can stop using if lifting up
-            else if (_gripMotionState == GripMotionState.LiftingUp && !useButtonHeld) {
+                // items are lifted while using, releasing means stop using
+            } else if (FistMotionIsLifting() && !useButtonHeld) {
                 EndUseHold();
             }
         }
-    }
-
-    bool CanThrow() {
-        return /*_gripMotionState == GripMotionState.Ready &&*/ !_playerController.isCrouching;
-    }
-
-    bool CanPunch() {
-        return _gripMotionState == GripMotionState.Ready;
+        // press to use item
+        else if (useButtonDown) {
+            BeginUseConsumable();
+        }
     }
 
     void BeginPunch() {
-        _gripMotionState = GripMotionState.InMotion;
+        SetFistMoving();
         _playerWeaponsManager.LowerWeapon();
+
+        // do punch at the start of the animation
         ForwardPunch();
         PunchSequence();
     }
 
-    void EndPunch() {
+    void SetFistReady() {
         _gripMotionState = GripMotionState.Ready;
-        _playerWeaponsManager.RaiseWeapon();
-
-        // can't aim while punching or empty handed
-        if (IsEmptyHanded) {
-            _playerWeaponsManager.SetAimBlock(false);
-        }
     }
 
-    void EndThrow() {
-        _gripMotionState = GripMotionState.Ready;
-        _playerWeaponsManager.SetAimBlock(false);
+    void SetFistMoving() {
+        _gripMotionState = GripMotionState.InMotion;
     }
 
     PunchButton TryPressButtonInGrabArea() {
-        var button = SearchRaycast<PunchButton>(_gripLayer);
+        var button = SearchRaycasts<PunchButton>(_gripLayer);
         if (button != null) {
             button.PressButton();
         }
@@ -207,10 +205,127 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     Grippable FindGrippableInGrabArea() {
-        return SearchRaycast<Grippable>(_gripLayer);
+        return SearchRaycasts<Grippable>(_gripLayer);
     }
 
-    T SearchRaycast<T>(LayerMask layer) where T : MonoBehaviour {
+    void ForwardPunch() {
+        var target = SearchRaycasts<Damageable>(_attackLayer);
+        if (target != null) {
+            PunchFx(target.transform.position);
+            target.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
+
+        } else {
+            var button = TryPressButtonInGrabArea();
+            if (button != null) {
+                PunchFx(button.transform.position);
+            }
+        }
+    }
+
+    void PunchFx(Vector3 punchPos) {
+        if (_audio && _punchSfx) {
+            _audio.PlayOneShot(_punchSfx);
+        }
+
+        if (_punchFx) {
+            Instantiate(_punchFx, punchPos, Quaternion.identity);
+        }
+    }
+
+    void Grip(Grippable gripped) {
+        gripped.transform.position = _gripSocket.position;
+        gripped.transform.rotation = _gripSocket.rotation;
+
+        // get the offset vector from the body socket to the item's socket
+        var socketOffset = _gripSocket.position - gripped.gripPoint.position;
+
+        // shift item by that amount to line up
+        gripped.transform.position += socketOffset;
+
+        // parent the socket and change its old reference
+        gripped.transform.SetParent(_gripSocket.transform, true);
+
+        // make it official
+        _currentlyGrippedThing = gripped;
+
+        // gripped thing reacts to this
+        gripped.BecomeGripped(_playerController.gameObject, _playerWeaponsManager.GetWeaponLayerIndex());
+
+        // play a short pickup motion
+        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f);
+    }
+
+    // BUG: throwing forward often stops forward motion due to hitting the collider
+    void ThrowGrippedThing() {
+        SetFistMoving();
+        DoThrow();
+        ThrowSequence();
+    }
+
+    void DoThrow() {
+        var gripped = UnGrip();
+        if (gripped != null) {
+            gripped.ThrowFrom(_gripThrowOrigin.position, _playerWeaponsManager.shotDirection, _throwForce);
+        }
+    }
+
+    void SetDownGrippedThing() {
+        // play a short pickup motion
+        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f)
+            .OnComplete(() => UnGrip());
+    }
+
+    Grippable UnGrip() {
+        var ungrippedThing = _currentlyGrippedThing;
+
+        // clear parent transforms and clear data
+        _currentlyGrippedThing.transform.SetParent(null);
+        _currentlyGrippedThing.UnGrip();
+        _currentlyGrippedThing = null;
+
+        return ungrippedThing;
+    }
+
+    // Tweening stuff
+    void BeginUseHold() {
+        // feels more responsive to begin immediately
+        SetFistMoving();
+        _currentlyGrippedThing.ActivateBegin();
+        MoveFistTo(_gripPositionUseHold, _punchTime)
+            .OnComplete(() => {
+                _gripMotionState = GripMotionState.LiftingUp;
+            });
+    }
+
+    void EndUseHold() {
+        SetFistMoving();
+        MoveFistTo(_gripPositionDefault, _cooldownTime)
+            .OnComplete(() => {
+                _currentlyGrippedThing.ActivateEnd();
+                SetFistReady();
+            });
+    }
+
+    void BeginUseConsumable() {
+        SetFistMoving();
+        MoveFistTo(_gripPositionUseHold, _useTime / 2)
+            .OnComplete(() => DoUseConsumable());
+    }
+
+    void DoUseConsumable() {
+        _currentlyGrippedThing.ActivateBegin();
+
+        MoveFistTo(_gripPositionUseTwist, _useTime / 2)
+            .OnComplete(() => EndUseConsumable());
+    }
+
+    void EndUseConsumable() {
+        MoveFistTo(_gripPositionDefault, _cooldownTime);
+
+        SetFistReady();
+    }
+
+    T SearchRaycasts<T>(LayerMask layer) where T : MonoBehaviour {
         var lookOrigin = _playerWeaponsManager.lookPosition;
         var lookDirection = _playerWeaponsManager.shotDirection;
 
@@ -242,154 +357,21 @@ public class PlayerGripManager : MonoBehaviour {
         return null;
     }
 
-    void ForwardPunch() {
-        var target = SearchRaycast<Damageable>(_attackLayer);
-        if (target != null) {
-            PunchFx(target.transform.position);
-            target.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
-
-        } else {
-            var button = TryPressButtonInGrabArea();
-            if(button != null) { 
-                PunchFx(button.transform.position);
-            }
-        }
-    }
-
-    void PunchFx(Vector3 punchPos) {
-        if (_audio && _punchSfx) {
-            _audio.PlayOneShot(_punchSfx);
-        }
-
-        if (_punchFx) {
-            Instantiate(_punchFx, punchPos, Quaternion.identity);
-        }
-    }
-
-    void Grip(Grippable gripped) {
-        gripped.transform.position = _gripSocket.position;
-        gripped.transform.rotation = _gripSocket.rotation;
-
-        // get the offset vector from the body socket to the barrel's socket
-        var socketOffset = _gripSocket.position - gripped.gripPoint.position;
-
-        // shift barrel by that amount to line up
-        gripped.transform.position += socketOffset;
-
-        // parent the socket and change its old reference
-        gripped.transform.SetParent(_gripSocket.transform, true);
-
-        // make it official
-        _currentlyGrippedThing = gripped;
-
-        // set render layer index
-        gripped.SetLayerMask(_playerWeaponsManager.GetWeaponLayerIndex());
-
-        // gripped thing reacts to this
-        gripped.BecomeGripped(_playerController.gameObject);
-
-        // play a short pickup motion
-        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f);
-
-        // prevent player from using ADS while gripping
-        _playerWeaponsManager.SetAimBlock(true);
-    }
-
-    // BUG: throwing forward often stops forward motion due to hitting the collider
-    void ThrowGrippedThing() {
-        _gripMotionState = GripMotionState.InMotion;
-        _playerWeaponsManager.SetAimBlock(false);
-
-        DoThrow();
-
-        ThrowSequence();
-    }
-
-    void DoThrow() {
-        var gripped = UnGrip();
-        if (gripped != null) {
-            gripped.ThrowFrom(_gripThrowOrigin.position, _playerWeaponsManager.shotDirection, _throwForce);
-        } else {
-            Debug.Log("Trying to throw empty handed");
-        }
-    }
-
-    void SetDownGrippedThing() {
-        // play a short pickup motion
-        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f)
-            .OnComplete(() => UnGrip());
-    }
-
-    Grippable UnGrip() {
-        var ungrippedThing = _currentlyGrippedThing;
-
-        // clear parent transforms and clear data
-        _currentlyGrippedThing.transform.SetParent(null);
-        _currentlyGrippedThing.UnGrip();
-        _currentlyGrippedThing = null;
-
-        return ungrippedThing;
-    }
-
-    // Tweening stuff
-    void BeginUseHold() {
-        // feels more responsive to begin immediately
-        _gripMotionState = GripMotionState.InMotion;
-        _currentlyGrippedThing.BeginUseHold();
-        MoveFistTo(_gripPositionUseHold, _punchTime)
-            .OnComplete(() => {
-                _gripMotionState = GripMotionState.LiftingUp;
-            });
-    }
-
-    void EndUseHold() {
-        _gripMotionState = GripMotionState.InMotion;
-        MoveFistTo(_gripPositionDefault, _cooldownTime)
-            .OnComplete(() => {
-                _currentlyGrippedThing.EndUseHold();
-                _gripMotionState = GripMotionState.Ready;
-            });
-    }
-
-    void BeginUseConsumable() {
-        _gripMotionState = GripMotionState.InMotion;
-        MoveFistTo(_gripPositionUseHold, _useTime / 2)
-            .OnComplete(() => DoUseConsumable());
-    }
-
-    void DoUseConsumable() {
-        _currentlyGrippedThing.UseItem();
-
-        MoveFistTo(_gripPositionUseTwist, _useTime / 2)
-            .OnComplete(() => EndUseConsumable());
-    }
-
-    void EndUseConsumable() {
-        //_currentlyGrippedThing.UseItem();
-
-        if (_currentlyGrippedThing.useType != Grippable.UseType.Reusable) {
-            Destroy(_currentlyGrippedThing.gameObject);
-            _currentlyGrippedThing = null;
-            _playerWeaponsManager.SetAimBlock(false);
-        }
-
-        MoveFistTo(_gripPositionDefault, _cooldownTime);
-
-        _gripMotionState = GripMotionState.Ready;
-    }
-
     void PunchSequence() {
         DOTween.Sequence()
             .Append(MoveFistTo(_gripPositionPunchFinish, _punchTime, _attackCurve)) // punching
             .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recovering
-            .OnComplete(() => EndPunch()); // cooldown finished
+            .OnComplete(() => {
+                SetFistReady();
+                _playerWeaponsManager.RaiseWeapon();
+            }); // cooldown finished
     }
 
     void ThrowSequence() {
         DOTween.Sequence()
             .Append(MoveFistTo(_gripPositionThrow, _throwTime, _attackCurve)) // throw
             .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recover
-            .OnComplete(() => EndThrow());
+            .OnComplete(() => SetFistReady());
     }
 
     // Tweening helpers
