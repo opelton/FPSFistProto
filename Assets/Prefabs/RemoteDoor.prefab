@@ -51,6 +51,7 @@ MonoBehaviour:
   _doorOpenPosition: {fileID: 3917848142063356898}
   _doorMoveTime: 0.5
   _doorEase: 1
+  _locked: 0
 --- !u!1 &2200531277443211128
 GameObject:
   m_ObjectHideFlags: 0
@@ -125,7 +126,8 @@ GameObject:
   - component: {fileID: 8572858336516124629}
   - component: {fileID: 8347462797573159857}
   - component: {fileID: 322124465319023042}
-  m_Layer: 0
+  - component: {fileID: 1692585807273901227}
+  m_Layer: 11
   m_Name: DoorBarrier
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -437,3 +439,29 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 0, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &1692585807273901227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5969070971927698602}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80cd5bd1a39b1d242afd1219aa6c089a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onUsed:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6005093104991419013}
+        m_MethodName: TryToggleDoor
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2

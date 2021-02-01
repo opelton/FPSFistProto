@@ -64,11 +64,13 @@ public class PlayerWeaponsManager : MonoBehaviour {
     public Vector3 shotDirection { get { return weaponShotAngle.forward; } }
     public Vector3 lookPosition {
         get { // if no active weapon, test from weapon camera
-            if (weaponCamera != null)
+            if (isAiming && weaponCamera != null) {
                 return weaponCamera.transform.position;
-
-            // if no weapon camera, test from transform
-            return transform.position;
+            } else if (m_PlayerCharacterController != null) { 
+                return m_PlayerCharacterController.playerCamera.transform.position;
+            }
+                // if no weapon camera, test from transform
+                return transform.position;
         }
     }
 

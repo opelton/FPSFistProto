@@ -18,6 +18,8 @@ public class PlayerGripManager : MonoBehaviour {
     [SerializeField] Transform _gripPositionUseTwist;
 
     [Header("Grip stats")]
+    [Tooltip("How far in front to try and place an item you gently set down")]
+    [SerializeField] float _maxRaycastDropDistance = 1.5f;
     [SerializeField] Transform _gripThrowOrigin;
     [SerializeField] float _throwForce = 10f;
     [SerializeField, Range(0, 1f)] float _throwTime = .15f;
@@ -120,29 +122,21 @@ public class PlayerGripManager : MonoBehaviour {
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
     }
 
-    bool GrippingHoldType() {
-        return _currentlyGrippedThing.activationType == Grippable.ActivationType.Hold;
-    }
-
-    bool GrippingPressType() {
-        return _currentlyGrippedThing.activationType == Grippable.ActivationType.Press;
-    }
-
-    bool FistMotionIsLifting() {
-        return _gripMotionState == GripMotionState.LiftingUp;
-    }
-
-    bool FistMotionIsReady() {
-        return _gripMotionState == GripMotionState.Ready;
-    }
-
     void TryForwardGrab() {
-        // search for grabbable thing
-        var grippableThing = FindGrippableInGrabArea();
-        if (grippableThing != null) {
-            Grip(grippableThing);
-        } else {
-            TryPressButtonInGrabArea();
+        // prioritize directly targeted
+        var precise = PreciseRaycast(_gripLayer);
+        if (precise != null) {
+            if (TryGrip(precise)) return;
+            if (TryPressButton(precise)) return;
+            if (TryUse(precise)) return;
+        }
+
+        // expanded targets are tested at the same priority
+        var expanded = ExpandedRaycast(_gripLayer);
+        if (expanded != null) {
+            if (TryGrip(expanded)) return;
+            if (TryPressButton(expanded)) return;
+            if (TryUse(expanded)) return;
         }
     }
 
@@ -185,7 +179,15 @@ public class PlayerGripManager : MonoBehaviour {
 
         // do punch at the start of the animation
         ForwardPunch();
-        PunchSequence();
+
+        // animate the punch
+        DOTween.Sequence()
+            .Append(MoveFistTo(_gripPositionPunchFinish, _punchTime, _attackCurve)) // punching
+            .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recovering
+            .OnComplete(() => {
+                SetFistReady();
+                _playerWeaponsManager.RaiseWeapon();
+            }); // cooldown finished
     }
 
     void SetFistReady() {
@@ -196,35 +198,47 @@ public class PlayerGripManager : MonoBehaviour {
         _gripMotionState = GripMotionState.InMotion;
     }
 
-    PunchButton TryPressButtonInGrabArea() {
-        var button = SearchRaycasts<PunchButton>(_gripLayer);
-        if (button != null) {
-            button.PressButton();
-        }
-        return button;
-    }
-
-    Grippable FindGrippableInGrabArea() {
-        return SearchRaycasts<Grippable>(_gripLayer);
-    }
-
     void ForwardPunch() {
-        var target = SearchRaycasts<Damageable>(_attackLayer);
-        if (target != null) {
-            PunchFx(target.transform.position);
-            target.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
-        } else {
-            var button = TryPressButtonInGrabArea();
-            if (button != null) {
-                PunchFx(button.transform.position);
+        // prioritize directly targeted
+        var precise = PreciseRaycast(_attackLayer);
+        if (precise != null) {
+            if (TryDamaging(precise, _punchDamage)) {
+                PunchFx(precise.transform.position);
+                return;
+            }
+        }
 
-            // HACK! This should go away once the bug with potion bottles registering damage is fixed (probably needs layer organization)
-            } else {
-                var bottle = SearchRaycasts<Damageable>(_gripLayer);
-                if (bottle != null) {
-                    PunchFx(bottle.transform.position);
-                    bottle.InflictDamage(_punchDamage, false, _playerController.gameObject, transform.position);
-                }
+        // TODO -- clean up layers, some components on different layers as others with same purpose
+        precise = PreciseRaycast(_gripLayer);
+        if (precise != null) {
+            if (TryPressButton(precise)) {
+                PunchFx(precise.transform.position);
+                return;
+            }
+            if (TryDamaging(precise, _punchDamage)) {
+                PunchFx(precise.transform.position);
+                return;
+            }
+        }
+
+        // expanded targets are tested at the same priority
+        var expanded = ExpandedRaycast(_attackLayer);
+        if (expanded != null) {
+            if (TryDamaging(expanded, _punchDamage)) {
+                PunchFx(expanded.transform.position);
+                return;
+            }
+        }
+
+        expanded = ExpandedRaycast(_gripLayer);
+        if (expanded != null) {
+            if (TryPressButton(expanded)) {
+                PunchFx(expanded.transform.position);
+                return;
+            }
+            if (TryDamaging(expanded, _punchDamage)) {
+                PunchFx(expanded.transform.position);
+                return;
             }
         }
     }
@@ -265,21 +279,50 @@ public class PlayerGripManager : MonoBehaviour {
     // BUG: throwing forward often stops forward motion due to hitting the collider
     void ThrowGrippedThing() {
         SetFistMoving();
+
+        // throw immediately
         DoThrow();
-        ThrowSequence();
+
+        // animate the throw
+        DOTween.Sequence()
+            .Append(MoveFistTo(_gripPositionThrow, _throwTime, _attackCurve)) // throw
+            .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recover
+            .OnComplete(() => SetFistReady());
     }
 
     void DoThrow() {
-        var gripped = UnGrip();
+        var gripped = RaycastAndDropGrippable();
         if (gripped != null) {
-            gripped.ThrowFrom(_gripThrowOrigin.position, _playerWeaponsManager.shotDirection, _throwForce);
+            gripped.Throw(_playerWeaponsManager.shotDirection, _throwForce);
         }
     }
 
-    void SetDownGrippedThing() {
-        // play a short pickup motion
-        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f)
-            .OnComplete(() => UnGrip());
+    // Raycasts forward and drops the grippable
+    Grippable RaycastAndDropGrippable() {
+        var paddingDist = .25f;
+        var rayDirection = _playerWeaponsManager.shotDirection;
+        var rayOrigin = _playerController.playerCamera.transform.position - rayDirection * paddingDist;
+        var checkDist = _maxRaycastDropDistance + paddingDist;
+
+        var dropped = UnGrip();
+        var droppedRb = dropped.GetComponent<Rigidbody>();
+        Vector3 finalPosition = rayOrigin;
+
+        // TODO -- if player is pressed against wall, find alternate place to set down item
+        // TODO -- pressing against a wall sometimes lets player throw things through it
+        // move the rb to the camera position and sweep test in aim direction for obstruction
+        droppedRb.position = rayOrigin;
+
+        if (droppedRb.SweepTest(rayDirection, out RaycastHit hitInfo, checkDist)) {
+            // object pushed back by object
+            finalPosition += rayDirection * hitInfo.distance;
+        } else {
+            // object at exact drop distance
+            finalPosition += rayDirection * checkDist;
+        }
+
+        droppedRb.position = finalPosition;
+        return dropped;
     }
 
     Grippable UnGrip() {
@@ -293,7 +336,96 @@ public class PlayerGripManager : MonoBehaviour {
         return ungrippedThing;
     }
 
+    // helpers
+    GameObject PreciseRaycast(LayerMask layerMask) {
+        var lookOrigin = _playerWeaponsManager.lookPosition;
+        var lookDirection = _playerWeaponsManager.shotDirection;
+
+        if (Physics.Raycast(lookOrigin, lookDirection,
+                out RaycastHit rayHit, _gripRange, layerMask)) {
+            return rayHit.collider.gameObject;
+        }
+        return null;
+    }
+
+    GameObject ExpandedRaycast(LayerMask layerMask) {
+        var lookOrigin = _playerWeaponsManager.lookPosition;
+        var lookDirection = _playerWeaponsManager.shotDirection;
+
+        // spherecast shouldn't reach behind player, offset it forward by its radius
+        var sphereCenter = lookOrigin + lookDirection * _gripRadius;
+
+        // sphere check shouldn't extend further than the regular ray check
+        var sphereDistance = Mathf.Max(_gripRange - _gripRadius, 0);
+
+        // if nothing is raycast, check a small distance on all sides for a nearby item
+        if (Physics.SphereCast(sphereCenter, _gripRadius, lookDirection,
+                out RaycastHit sphereHit, sphereDistance, layerMask)) {
+            return sphereHit.collider.gameObject;
+        }
+
+        return null;
+    }
+
+    bool GrippingHoldType() {
+        return _currentlyGrippedThing.activationType == Grippable.ActivationType.Hold;
+    }
+
+    bool GrippingPressType() {
+        return _currentlyGrippedThing.activationType == Grippable.ActivationType.Press;
+    }
+
+    bool FistMotionIsLifting() {
+        return _gripMotionState == GripMotionState.LiftingUp;
+    }
+
+    bool FistMotionIsReady() {
+        return _gripMotionState == GripMotionState.Ready;
+    }
+
+    bool TryGrip(GameObject potential) {
+        var grippable = potential.GetComponent<Grippable>();
+        if (grippable != null) {
+            Grip(grippable);
+            return true;
+        }
+        return false;
+    }
+
+    bool TryPressButton(GameObject potential) {
+        var button = potential.GetComponent<PunchButton>();
+        if (button != null) {
+            button.PressButton();
+            return true;
+        }
+        return false;
+    }
+
+    bool TryUse(GameObject potential) {
+        var usable = potential.GetComponent<Usable>();
+        if (usable != null) {
+            usable.Use();
+            return true;
+        }
+        return false;
+    }
+
+    bool TryDamaging(GameObject potential, float damage) {
+        var target = potential.GetComponent<Damageable>();
+        if (target != null) {
+            target.InflictDamage(damage, false, _playerController.gameObject, transform.position);
+            return true;
+        }
+        return false;
+    }
+
     // Tweening stuff
+    void SetDownGrippedThing() {
+        // play a short pickup motion
+        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f)
+            .OnComplete(() => RaycastAndDropGrippable());
+    }
+
     void BeginUseHold() {
         // feels more responsive to begin immediately
         SetFistMoving();
@@ -332,56 +464,6 @@ public class PlayerGripManager : MonoBehaviour {
         SetFistReady();
     }
 
-    T SearchRaycasts<T>(LayerMask layer) where T : MonoBehaviour {
-        var lookOrigin = _playerWeaponsManager.lookPosition;
-        var lookDirection = _playerWeaponsManager.shotDirection;
-
-        // highest priority, item is directly under the crosshairs
-        if (Physics.Raycast(lookOrigin, lookDirection,
-                out RaycastHit rayHit, _gripRange, layer)) {
-
-            var raySearch = rayHit.collider.gameObject.GetComponent<T>();
-            if (raySearch != null) {
-                return raySearch;
-            }
-        }
-
-        // spherecast shouldn't reach behind player, offset it forward by its radius
-        var sphereCenter = lookOrigin + lookDirection * _gripRadius;
-
-        // sphere check shouldn't extend further than the regular ray check
-        var sphereDistance = Mathf.Max(_gripRange - _gripRadius, 0);
-
-        // if nothing is raycast, check a small distance on all sides for a nearby item
-        if (Physics.SphereCast(sphereCenter, _gripRadius, lookDirection, out RaycastHit sphereHit, sphereDistance, layer)) {
-
-            var sphereSearch = sphereHit.collider.gameObject.GetComponent<T>();
-            if (sphereSearch != null) {
-                return sphereSearch;
-            }
-        }
-
-        return null;
-    }
-
-    void PunchSequence() {
-        DOTween.Sequence()
-            .Append(MoveFistTo(_gripPositionPunchFinish, _punchTime, _attackCurve)) // punching
-            .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recovering
-            .OnComplete(() => {
-                SetFistReady();
-                _playerWeaponsManager.RaiseWeapon();
-            }); // cooldown finished
-    }
-
-    void ThrowSequence() {
-        DOTween.Sequence()
-            .Append(MoveFistTo(_gripPositionThrow, _throwTime, _attackCurve)) // throw
-            .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recover
-            .OnComplete(() => SetFistReady());
-    }
-
-    // Tweening helpers
     Tween MoveFistTo(Transform goal, float duration) {
         Sequence s = DOTween.Sequence()
             // position over time

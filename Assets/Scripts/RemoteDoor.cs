@@ -9,11 +9,12 @@ public class RemoteDoor : MonoBehaviour {
     [SerializeField] Transform _doorOpenPosition;
     [SerializeField] float _doorMoveTime = .5f;
     [SerializeField] Ease _doorEase = Ease.Linear;
+    [SerializeField] bool _locked = false;
     bool _usable = true;
     bool _isOpen = false;
 
     public void TryOpenDoor() {
-        if (_usable) {
+        if (_usable && !_locked) {
             _isOpen = true;
             BeginDoorMove();
 
@@ -31,12 +32,19 @@ public class RemoteDoor : MonoBehaviour {
     }
 
     public void TryToggleDoor() {
-        if(_isOpen) { 
-            TryCloseDoor();            
-        }
-        else { 
+        if (_isOpen) {
+            TryCloseDoor();
+        } else {
             TryOpenDoor();
         }
+    }
+
+    public void Unlock() { _locked = false; }
+    public void Lock() { _locked = true; }
+
+    public void TryUnlockOpen() { 
+        Unlock();
+        TryOpenDoor();
     }
 
     Tween MoveDoorOpen() {

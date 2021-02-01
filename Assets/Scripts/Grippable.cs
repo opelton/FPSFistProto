@@ -42,7 +42,7 @@ public class Grippable : MonoBehaviour {
         _hudLayerMask = hudLayer;
         OverrideLayerMask();
 
-        DeleteRigidbodies();
+        ShelvePhysics();
 
         _owner = gripper;
         onGrabbed.Invoke(_owner);
@@ -50,7 +50,7 @@ public class Grippable : MonoBehaviour {
 
     public void UnGrip() {
         _owner = null;
-        RestoreRidigbodies();
+        RestorePhysics();
         RestoreLayerMask();
     }
 
@@ -65,12 +65,9 @@ public class Grippable : MonoBehaviour {
     }
 
     public void ApplyForce(Vector3 direction, float force) {
-        _body.velocity += direction * force;
-    }
-
-    public void ThrowFrom(Vector3 position, Vector3 direction, float force) {
-        transform.position = position;
-        Throw(direction, force);
+        if(_body != null) { 
+            _body.velocity += direction * force;
+        }
     }
 
     public void DestroyItem() {
@@ -104,18 +101,23 @@ public class Grippable : MonoBehaviour {
     }
 
     // setting kinematic and disabling collisions DOES NOT disable rigidbody enough
-    void DeleteRigidbodies() {
+    void ShelvePhysics() {
         _collider.enabled = false;
 
         // save a copy of the existing rigidbody and delete it
         if (_body != null) {
-            _storedBody = new RigidbodyCopy(_body);
+            if(_storedBody == null) 
+            { 
+                // only needs to happen once per item
+                _storedBody = new RigidbodyCopy(_body);
+            }
+
             Destroy(_body);
             _body = null;
         }
     }
 
-    void RestoreRidigbodies() {
+    void RestorePhysics() {
         _collider.enabled = true;
 
         if (_storedBody != null) {

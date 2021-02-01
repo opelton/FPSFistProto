@@ -34,6 +34,10 @@ public class PunchButton : MonoBehaviour {
         }
     }
 
+    public void PlayerUseButton(GameObject player) { 
+        PressButton();
+    }
+
     void SendButtonDown() {
         DOTween.Sequence()
             .Append(ChangeColorTo(_pressColor, _buttonPressDuration).SetEase(_pressEasing))
@@ -43,9 +47,14 @@ public class PunchButton : MonoBehaviour {
 
     void BeginButtonCooldown() {
         DOTween.Sequence()
-            .Append(ChangeColorTo(_readyColor, _buttonCooldown).SetEase(_cooldownEasing))
-            .Join(MoveButtonTo(_buttonUpPosition, _buttonCooldown).SetEase(_cooldownEasing))
-            .OnComplete(() => _buttonReady = true);
+            // .Append(ChangeColorTo(_readyColor, _buttonCooldown).SetEase(_cooldownEasing))
+            // .Join(MoveButtonTo(_buttonUpPosition, _buttonCooldown).SetEase(_cooldownEasing))
+            //.OnComplete(() => _buttonReady = true);
+            .Append(MoveButtonTo(_buttonUpPosition, _buttonCooldown).SetEase(_cooldownEasing))
+            .OnComplete(() => {
+                _buttonReady = true;
+                SetButtonColor(_readyColor);
+            });
     }
 
     Tween ChangeColorTo(Color goal, float duration) {
@@ -54,5 +63,9 @@ public class PunchButton : MonoBehaviour {
 
     Tween MoveButtonTo(Transform goal, float duration) {
         return _buttonTransform.DOMove(goal.position, duration);
+    }
+
+    void SetButtonColor(Color color) {
+        _buttonRenderer.material.color = color;
     }
 }
