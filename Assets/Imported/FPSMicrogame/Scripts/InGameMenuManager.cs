@@ -2,8 +2,7 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class InGameMenuManager : MonoBehaviour
-{
+public class InGameMenuManager : MonoBehaviour {
     [Tooltip("Root GameObject of the menu used to toggle its activation")]
     public GameObject menuRoot;
     [Tooltip("Master volume when menu is open")]
@@ -17,14 +16,13 @@ public class InGameMenuManager : MonoBehaviour
     public Toggle invincibilityToggle;
     [Tooltip("Toggle component for framerate display")]
     public Toggle framerateToggle;
-    [Tooltip("GameObject for the controls")]
-    public GameObject controlImage;
+    //[Tooltip("GameObject for the controls")]
+    //public GameObject controlImage;
 
     PlayerInputHandler m_PlayerInputsHandler;
     Health m_PlayerHealth;
 
-    void Start()
-    {
+    void Start() {
         m_PlayerInputsHandler = FindObjectOfType<PlayerInputHandler>();
         DebugUtility.HandleErrorIfNullFindObject<PlayerInputHandler, InGameMenuManager>(m_PlayerInputsHandler, this);
 
@@ -43,63 +41,52 @@ public class InGameMenuManager : MonoBehaviour
         invincibilityToggle.onValueChanged.AddListener(OnInvincibilityChanged);
     }
 
-    private void Update()
-    {
+    private void Update() {
         // Lock cursor when clicking outside of menu
-        if (!menuRoot.activeSelf && Input.GetMouseButtonDown(0))
-        {
+        if (!menuRoot.activeSelf && Input.GetMouseButtonDown(0)) {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-        if(Input.GetKeyDown(KeyCode.Escape))
-        {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
 
-        if (Input.GetButtonDown(GameConstants.k_ButtonNamePauseMenu)
-            || (menuRoot.activeSelf && Input.GetButtonDown(GameConstants.k_ButtonNameCancel)))
-        {
-            if (controlImage.activeSelf)
-            {
-                controlImage.SetActive(false);
-                return;
-            }
+        if (Input.GetButtonDown(GameConstants.k_ButtonNamePauseMenu) ||
+            (menuRoot.activeSelf && Input.GetButtonDown(GameConstants.k_ButtonNameCancel))) {
+
+            // if (controlImage.activeSelf) {
+            //     controlImage.SetActive(false);
+            //     return;
+            // }
 
             SetPauseMenuActivation(!menuRoot.activeSelf);
 
         }
 
-        if (Input.GetAxisRaw(GameConstants.k_AxisNameVertical) != 0)
-        {
-            if (EventSystem.current.currentSelectedGameObject == null)
-            {
+        if (Input.GetAxisRaw(GameConstants.k_AxisNameVertical) != 0) {
+            if (EventSystem.current.currentSelectedGameObject == null) {
                 EventSystem.current.SetSelectedGameObject(null);
                 lookSensitivitySlider.Select();
             }
         }
     }
 
-    public void ClosePauseMenu()
-    {
+    public void ClosePauseMenu() {
         SetPauseMenuActivation(false);
     }
 
-    void SetPauseMenuActivation(bool active)
-    {
+    void SetPauseMenuActivation(bool active) {
         menuRoot.SetActive(active);
 
-        if (menuRoot.activeSelf)
-        {
+        if (menuRoot.activeSelf) {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             Time.timeScale = 0f;
             AudioUtility.SetMasterVolume(volumeWhenMenuOpen);
 
             EventSystem.current.SetSelectedGameObject(null);
-        }
-        else
-        {
+        } else {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             Time.timeScale = 1f;
@@ -108,23 +95,19 @@ public class InGameMenuManager : MonoBehaviour
 
     }
 
-    void OnMouseSensitivityChanged(float newValue)
-    {
+    void OnMouseSensitivityChanged(float newValue) {
         m_PlayerInputsHandler.lookSensitivity = newValue;
     }
 
-    void OnShadowsChanged(bool newValue)
-    {
+    void OnShadowsChanged(bool newValue) {
         QualitySettings.shadows = newValue ? ShadowQuality.All : ShadowQuality.Disable;
     }
 
-    void OnInvincibilityChanged(bool newValue)
-    {
+    void OnInvincibilityChanged(bool newValue) {
         m_PlayerHealth.invincible = newValue;
     }
 
-    public void OnShowControlButtonClicked(bool show)
-    {
-        controlImage.SetActive(show);
+    public void OnShowControlButtonClicked(bool show) {
+        //controlImage.SetActive(show);
     }
 }
