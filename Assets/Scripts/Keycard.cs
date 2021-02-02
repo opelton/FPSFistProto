@@ -9,6 +9,9 @@ public class Vector3Event : UnityEvent<Vector3> { }
 
 public class Keycard : MonoBehaviour {
     public Vector3Event onButtonPressed;
+    public UnityEvent onUnlockProximity;
+    [SerializeField] Transform _unlockPoint;
+    [SerializeField] float _unlockDistance = 1f;
     [SerializeField] Transform _buttonTransform;
     [SerializeField] Renderer _lightRenderer;
     [SerializeField] Transform _buttonUpPosition;
@@ -20,6 +23,7 @@ public class Keycard : MonoBehaviour {
     [SerializeField] AudioClip _buttonPressClip;
     AudioSource _audioSource;
     bool _buttonReady = true;
+    bool _proximityTriggered = false;
 
     void OnEnable() {
         _lightRenderer.material.color = _buttonReady ? _readyLightColor : _pressedLightColor;
@@ -28,6 +32,17 @@ public class Keycard : MonoBehaviour {
     void Awake() {
         gameObject.GetComponent<Grippable>().onActivatedBegin.AddListener(TryPushButton);
         _audioSource = GetComponent<AudioSource>();
+    }
+
+    void FixedUpdate() {
+        CheckProximityTrigger();
+    }
+
+    void CheckProximityTrigger() {
+        if (!_proximityTriggered && Vector3.Distance(_unlockPoint.position, transform.position) <= _unlockDistance) {
+            onUnlockProximity.Invoke();
+            _proximityTriggered = true;
+        }
     }
 
     public void TryPushButton(GameObject gripper) {
@@ -52,7 +67,6 @@ public class Keycard : MonoBehaviour {
     }
 
     void ButtonUp() {
-
         _buttonTransform.DOLocalMove(_buttonUpPosition.localPosition, _buttonTravelTime)
             .SetEase(_buttonEase)
             .OnComplete(ReadyButton);

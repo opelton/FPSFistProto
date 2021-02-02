@@ -6,6 +6,7 @@ public class KeycardPanel : MonoBehaviour {
     public UnityEvent onDoorToggle;
     [SerializeField] float _unlockDistance = 10f;
     [SerializeField] AudioClip _pingSfx;
+    [SerializeField] AudioClip _unlockSfx;
     [SerializeField] float _pingDelay = .25f;
     [SerializeField, ColorUsage(false, true)] Color _readyColor = Color.grey;
     [SerializeField, ColorUsage(false, true)] Color _pingColor = Color.white;
@@ -14,11 +15,9 @@ public class KeycardPanel : MonoBehaviour {
     [SerializeField] Renderer _keyBulb;
     AudioSource _audioSource;
     bool _panelReady = true;
-    float _startingPitch;
 
     void Awake() {
         _audioSource = GetComponent<AudioSource>();
-        _startingPitch = _audioSource.pitch;
     }
 
     public void KeycardPing(Vector3 keycardPos) {
@@ -36,15 +35,22 @@ public class KeycardPanel : MonoBehaviour {
         }
     }
 
+    public void KeycardUnlock() {
+        _audioSource.spatialBlend = 0;
+        _audioSource.pitch = 1.0f;
+        _audioSource.PlayOneShot(_unlockSfx);
+        onDoorToggle.Invoke();
+    }
+
     IEnumerator DelayedPing(float distance) {
         yield return new WaitForSeconds(_pingDelay);
         _panelReady = true;
-
+        _audioSource.spatialBlend = 0.85f;
         if (distance <= _unlockDistance) {
-            onDoorToggle.Invoke();
-            _audioSource.pitch = _startingPitch * 3;
+            //onDoorToggle.Invoke();
+            _audioSource.pitch = 0.5f;
         } else {
-            _audioSource.pitch = _startingPitch;
+            _audioSource.pitch = 1.0f;
         }
         _audioSource.PlayOneShot(_pingSfx);
 
