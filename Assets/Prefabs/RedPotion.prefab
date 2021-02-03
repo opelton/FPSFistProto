@@ -1106,8 +1106,10 @@ MonoBehaviour:
   assetGuid: 
   m_IsSelectable: 1
   m_SelectedFaces: 
-  m_SelectedEdges: []
-  m_SelectedVertices: 
+  m_SelectedEdges:
+  - a: 0
+    b: 0
+  m_SelectedVertices: 0000000000000000
 --- !u!114 &1492534338102548134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1185,6 +1187,7 @@ MonoBehaviour:
   onUsedFX: {fileID: 8950624839484268180, guid: 2b9a2695fde84a54c85d9ed0eb3b1318,
     type: 3}
   _healAmount: 25
+  _splashRadius: 4
 --- !u!114 &1256624387777223698
 MonoBehaviour:
   m_ObjectHideFlags: 0

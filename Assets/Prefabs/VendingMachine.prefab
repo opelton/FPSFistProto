@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 7578709150137911112}
   - component: {fileID: 7578709150137911124}
   - component: {fileID: 7578709150137911127}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: VendingMachine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +58,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7578709150137911113}
-  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0.00000028088027}
   m_LocalPosition: {x: 0.52000046, y: 0, z: 23.59}
   m_LocalScale: {x: 0.7258601, y: 0.72586, z: 0.7258601}
   m_Children:
@@ -66,7 +66,7 @@ Transform:
   - {fileID: 7578709149099695993}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -179.99998, z: 0}
 --- !u!33 &7578709150137911114
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -821,6 +821,11 @@ PrefabInstance:
       propertyPath: onButtonPressed.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 7578709150137911124}
+    - target: {fileID: 9034742872744165750, guid: ca86d883a0c6579498b9816839f44a7c,
+        type: 3}
+      propertyPath: _buttonCooldown
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 9034742872744165768, guid: ca86d883a0c6579498b9816839f44a7c,
         type: 3}
       propertyPath: m_LocalPosition.x

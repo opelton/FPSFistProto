@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6296096094775861833}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Default
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39,7 +39,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7308743660660872536}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: UseTwist
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -69,7 +69,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933658985477011}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: AimPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -99,7 +99,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933659200358299}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: AimingWeaponPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -129,7 +129,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933659240274736}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: DownWeaponPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -159,7 +159,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933659657994623}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: DefaultWeaponPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -189,7 +189,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933659919634334}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: WeaponParentSocket
   m_TagString: Untagged
   m_Icon: {fileID: 7148428337604731935, guid: 0000000000000000d000000000000000, type: 0}
@@ -219,7 +219,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933660197330140}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: WeaponShotAngle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -249,7 +249,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 822933660231365848}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: FirstPersonSockets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -291,7 +291,7 @@ GameObject:
   - component: {fileID: 822933660269432102}
   - component: {fileID: 822933660269432097}
   - component: {fileID: 151519246414555895}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 419385456094870383, guid: 0000000000000000d000000000000000, type: 0}
@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lookSensitivity: 1
-  webglLookSensitivityMultiplier: 0.25
+  webglLookSensitivityMultiplier: 0.6
   triggerAxisThreshold: 0.4
   invertYAxis: 0
   invertXAxis: 0
@@ -601,6 +601,7 @@ MonoBehaviour:
   _gripPositionPunchFinish: {fileID: 5481832008231092855}
   _gripPositionUseHold: {fileID: 5322743357545276695}
   _gripPositionUseTwist: {fileID: 7308743660660872536}
+  _maxRaycastDropDistance: 1.5
   _gripThrowOrigin: {fileID: 8027806472574300935}
   _throwForce: 25
   _throwTime: 0.2
@@ -650,7 +651,7 @@ GameObject:
   m_Component:
   - component: {fileID: 822933660598288060}
   - component: {fileID: 822933660598288061}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: ShadowProjector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -700,7 +701,7 @@ GameObject:
   m_Component:
   - component: {fileID: 822933660753522913}
   - component: {fileID: 822933660753522918}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: WeaponCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -775,7 +776,7 @@ GameObject:
   - component: {fileID: 822933660885066678}
   - component: {fileID: 822933660885066676}
   - component: {fileID: 822933660885066679}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -859,7 +860,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8027806472574300935}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: ThrowOrigin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -889,7 +890,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6089308477139903935}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Down
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1203,8 +1204,10 @@ MonoBehaviour:
   assetGuid: 
   m_IsSelectable: 1
   m_SelectedFaces: 
-  m_SelectedEdges: []
-  m_SelectedVertices: 
+  m_SelectedEdges:
+  - a: 0
+    b: 0
+  m_SelectedVertices: 0000000000000000
 --- !u!1 &2953994406162178964
 GameObject:
   m_ObjectHideFlags: 0
@@ -1214,7 +1217,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4606089828266238035}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: WeaponSockets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1248,7 +1251,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5899216663940666332}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: GripSockets
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1286,7 +1289,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8675142371054741703}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Throw
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1316,7 +1319,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5322743357545276695}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: UseHold
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1346,7 +1349,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5481832008231092855}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: PunchAttack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1376,7 +1379,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9768151241241229}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: PunchLoad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1406,7 +1409,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 582346741135160929}
-  m_Layer: 10
+  m_Layer: 12
   m_Name: MainGripSocket
   m_TagString: Untagged
   m_Icon: {fileID: 0}
