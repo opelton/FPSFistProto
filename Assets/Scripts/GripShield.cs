@@ -1,29 +1,29 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Grippable))]
+[RequireComponent(typeof(Damageable))]
 public class GripShield : MonoBehaviour {
-    [SerializeField] float _protectionAngleMinX = -30;
-    [SerializeField] float _protectionAngleMaxX = 30;
     Grippable _gripBase;
+    Damageable _damage;
 
     void Awake() {
         _gripBase = GetComponent<Grippable>();
         _gripBase.onActivatedBegin.AddListener(BeginBlocking);
         _gripBase.onActivatedEnd.AddListener(EndBlocking);
+
+        _damage = GetComponent<Damageable>();
+        _damage.onDamageTaken.AddListener(ShieldDamaged);
     }
 
-    // TODO -- damageable should stay simple, block should work some other way
+    void ShieldDamaged(float impactForce) {
+        _gripBase.onRecoilReceived.Invoke(impactForce);
+    }
+
     void BeginBlocking(GameObject gripper) {
-        var dmg = gripper.GetComponent<Damageable>();
-        dmg._directionalBlock = true;
-        dmg._directionalBlockAngleMax = _protectionAngleMaxX;
-        dmg._directionalBlockAngleMin = _protectionAngleMinX;
+        _gripBase.EnableFirstPersonBlocking();
     }
 
     void EndBlocking(GameObject gripper) {
-        var dmg = gripper.GetComponent<Damageable>();
-        dmg._directionalBlock = false;
-        dmg._directionalBlockAngleMax = 0;
-        dmg._directionalBlockAngleMin = 0;
+        _gripBase.DisableFirstPersonBlocking();
     }
 }

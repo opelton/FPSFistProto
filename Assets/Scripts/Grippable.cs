@@ -2,9 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-[System.Serializable]
-public class GripActionEvent : UnityEvent<GameObject> { }
-
 public class Grippable : MonoBehaviour {
     public enum ActivationType { Press, Hold }
 
@@ -18,6 +15,7 @@ public class Grippable : MonoBehaviour {
     [HideInInspector] public UnityEvent onThrowImpact;
     [HideInInspector] public GripActionEvent onActivatedBegin;
     [HideInInspector] public GripActionEvent onActivatedEnd;
+    [HideInInspector] public FloatEvent onRecoilReceived;
 
     // members
     public Transform gripPoint => gripAnchor != null ? gripAnchor : gameObject.transform;
@@ -26,10 +24,10 @@ public class Grippable : MonoBehaviour {
     // privates
     Collider _collider;
     Rigidbody _body;
-    RigidbodyCopy _storedBody;
     LayerMask _hudLayerMask;
     int _storedLayerMask;
     bool _thrown;
+    bool _blocking;
     GameObject _owner;
 
     void Start() {
@@ -65,7 +63,7 @@ public class Grippable : MonoBehaviour {
     }
 
     public void ApplyForce(Vector3 direction, float force) {
-        if(_body != null) { 
+        if (_body != null) {
             _body.velocity += direction * force;
         }
     }
@@ -100,35 +98,37 @@ public class Grippable : MonoBehaviour {
         SetLayerMask(_storedLayerMask);
     }
 
-    // setting kinematic and disabling collisions DOES NOT disable rigidbody enough
     void ShelvePhysics() {
         _collider.enabled = false;
 
-        // save a copy of the existing rigidbody and delete it
         if (_body != null) {
-            if(_storedBody == null) 
-            { 
-                // only needs to happen once per item
-                _storedBody = new RigidbodyCopy(_body);
-            }
-
-            Destroy(_body);
-            _body = null;
+            _body.isKinematic = true;
+            _body.detectCollisions = false;
         }
     }
 
     void RestorePhysics() {
         _collider.enabled = true;
 
-        if (_storedBody != null) {
-            _body = _storedBody.CopyTo(gameObject);
+        if (_body != null) {
+            _body.isKinematic = false;
+            _body.detectCollisions = true;
         }
     }
 
-    // TODO -- some grippables hit buttons through trigger, and some through direct collision... hmmm....
+    public void EnableFirstPersonBlocking() {
+        _blocking = true;
+        RestorePhysics();
+    }
+
+    public void DisableFirstPersonBlocking() {
+        _blocking = false;
+        ShelvePhysics();
+    }
+
+    // TODO -- throw collisions are inconsistent
     void OnCollisionEnter(Collision collision) {
         if (_thrown) {
-
             // flip buttons on direct contact
             var button = collision.gameObject.GetComponent<PunchButton>();
             if (button != null) {

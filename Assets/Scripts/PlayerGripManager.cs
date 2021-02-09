@@ -78,7 +78,6 @@ public class PlayerGripManager : MonoBehaviour {
         _audio = GetComponent<AudioSource>();
         DebugUtility.HandleErrorIfNullGetComponent<AudioSource, PlayerGripManager>(_audio, this, gameObject);
 
-        _damage.onDamageBlocked.AddListener(RecoilFist);
         _mainSocketLocalPosition = _gripPositionDefault.localPosition;
     }
 
@@ -120,6 +119,21 @@ public class PlayerGripManager : MonoBehaviour {
 
         // Set final weapon socket position based on all the combined animation influences
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
+
+        TrackGrippedPosition();
+    }
+
+    void TrackGrippedPosition() {
+        if (_currentlyGrippedThing != null) {
+            _currentlyGrippedThing.transform.position = _gripSocket.position;
+            _currentlyGrippedThing.transform.rotation = _gripSocket.rotation;
+
+            // get the offset vector from the body socket to the item's socket
+            var socketOffset = _gripSocket.position - _currentlyGrippedThing.gripPoint.position;
+
+            // shift item by that amount to line up
+            _currentlyGrippedThing.transform.position += socketOffset;
+        }
     }
 
     void TryForwardGrab() {
@@ -141,7 +155,7 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void RecoilFist(float recoilForce) {
-        m_AccumulatedRecoil += Vector3.back * recoilForce;
+        m_AccumulatedRecoil += Vector3.back * recoilForce * .65f;
         m_AccumulatedRecoil = Vector3.ClampMagnitude(m_AccumulatedRecoil, maxRecoilDistance);
     }
 
@@ -254,23 +268,18 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void Grip(Grippable gripped) {
-        gripped.transform.position = _gripSocket.position;
-        gripped.transform.rotation = _gripSocket.rotation;
+        _currentlyGrippedThing = gripped;
 
-        // get the offset vector from the body socket to the item's socket
-        var socketOffset = _gripSocket.position - gripped.gripPoint.position;
-
-        // shift item by that amount to line up
-        gripped.transform.position += socketOffset;
+        TrackGrippedPosition();
 
         // parent the socket and change its old reference
         gripped.transform.SetParent(_gripSocket.transform, true);
 
-        // make it official
-        _currentlyGrippedThing = gripped;
-
         // gripped thing reacts to this
         gripped.BecomeGripped(_playerController.gameObject, _playerWeaponsManager.GetWeaponLayerIndex());
+
+        // subscribe to recoil
+        _currentlyGrippedThing.onRecoilReceived.AddListener(RecoilFist);
 
         // play a short pickup motion
         TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f);
@@ -308,24 +317,25 @@ public class PlayerGripManager : MonoBehaviour {
         var droppedRb = dropped.GetComponent<Rigidbody>();
         Vector3 finalPosition = rayOrigin;
 
-        // TODO -- if player is pressed against wall, find alternate place to set down item
         // TODO -- pressing against a wall sometimes lets player throw things through it
         // move the rb to the camera position and sweep test in aim direction for obstruction
-        droppedRb.position = rayOrigin;
+        droppedRb.transform.position = rayOrigin;
 
         if (droppedRb.SweepTest(rayDirection, out RaycastHit hitInfo, checkDist)) {
             // object pushed back by object
             finalPosition += rayDirection * hitInfo.distance;
+            //Debug.Log("obstructed!");
         } else {
             // object at exact drop distance
             finalPosition += rayDirection * checkDist;
         }
 
-        droppedRb.position = finalPosition;
+        droppedRb.transform.position = finalPosition;
         return dropped;
     }
 
     Grippable UnGrip() {
+        _currentlyGrippedThing.onRecoilReceived.RemoveListener(RecoilFist);
         var ungrippedThing = _currentlyGrippedThing;
 
         // clear parent transforms and clear data

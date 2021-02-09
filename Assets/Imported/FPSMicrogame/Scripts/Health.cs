@@ -59,9 +59,6 @@ public class Health : MonoBehaviour
         HandleDeath();
     }
 
-    public void BlockDamage(float damage, GameObject damageSource, Vector3 damagePosition) {
-    }
-
     public void Kill()
     {
         currentHealth = 0f;
