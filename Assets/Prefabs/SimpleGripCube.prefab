@@ -138,12 +138,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f31d6d28e41f5ff48968b4835101a480, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _activationType: 1
+  _activationType: 0
   gripAnchor: {fileID: 0}
   _throwDamage: 25
-  _weaponLayerMask:
-    serializedVersion: 2
-    m_Bits: 0
   onGrabbed:
     m_PersistentCalls:
       m_Calls: []
@@ -160,6 +157,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onActivatedEnd:
+    m_PersistentCalls:
+      m_Calls: []
+  onRecoilReceived:
     m_PersistentCalls:
       m_Calls: []
 --- !u!54 &827085542751143414

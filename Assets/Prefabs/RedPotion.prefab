@@ -1106,10 +1106,8 @@ MonoBehaviour:
   assetGuid: 
   m_IsSelectable: 1
   m_SelectedFaces: 
-  m_SelectedEdges:
-  - a: 0
-    b: 0
-  m_SelectedVertices: 0000000000000000
+  m_SelectedEdges: []
+  m_SelectedVertices: 
 --- !u!114 &1492534338102548134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1122,7 +1120,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f31d6d28e41f5ff48968b4835101a480, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _activationType: 0
+  _activationType: 1
   gripAnchor: {fileID: 6229545109987748939}
   _throwDamage: 100
   onGrabbed:
@@ -1141,6 +1139,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   onActivatedEnd:
+    m_PersistentCalls:
+      m_Calls: []
+  onRecoilReceived:
     m_PersistentCalls:
       m_Calls: []
 --- !u!54 &6580212093718860585
@@ -1202,10 +1203,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damageMultiplier: 1
   sensibilityToSelfdamage: 0.5
-  _directionalBlock: 0
-  _directionalBlockAngleMin: -45
-  _directionalBlockAngleMax: 45
-  onDamageBlocked:
+  onDamageTaken:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &617293531580878697

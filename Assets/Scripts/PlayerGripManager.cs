@@ -120,11 +120,12 @@ public class PlayerGripManager : MonoBehaviour {
         // Set final weapon socket position based on all the combined animation influences
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
 
+        // grippables with rigidbodies will drift away unless their position is manually updated
         TrackGrippedPosition();
     }
 
     void TrackGrippedPosition() {
-        if (_currentlyGrippedThing != null) {
+        if (!IsEmptyHanded) {
             _currentlyGrippedThing.transform.position = _gripSocket.position;
             _currentlyGrippedThing.transform.rotation = _gripSocket.rotation;
 
@@ -172,31 +173,69 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void UpdateUseInput(bool useButtonDown, bool useButtonHeld) {
-        // press and hold to use item
-        if (GrippingHoldType()) {
-            if (FistMotionIsReady() && useButtonDown) {
-                BeginUseHold();
-                // items are lifted while using, releasing means stop using
-            } else if (FistMotionIsLifting() && !useButtonHeld) {
-                EndUseHold();
-            }
-        }
-        // press to use item
-        else if (useButtonDown) {
-            BeginUseConsumable();
+
+        switch (_currentlyGrippedThing.activationType) {
+            case Grippable.ActivationType.Hold:
+                UpdateHoldTypeInput(useButtonDown, useButtonHeld);
+                break;
+
+            case Grippable.ActivationType.Press:
+                UpdateUseConsumableInput(useButtonDown);
+                break;
+
+            default:
+                UpdateUselessInput(useButtonDown);
+                break;
         }
     }
 
-    void BeginPunch() {
-        SetFistMoving();
-        _playerWeaponsManager.LowerWeapon();
+    void UpdateHoldTypeInput(bool useButtonDown, bool useButtonHeld) {
+        if (FistMotionIsReady() && useButtonDown) {
+            BeginUseHold();
+            // items are lifted while using, releasing means stop using
+        } else if (FistMotionIsLifting() && !useButtonHeld) {
+            EndUseHold();
+        }
+    }
 
-        // do punch at the start of the animation
-        ForwardPunch();
+    void UpdateUseConsumableInput(bool useButtonDown) {
+        if (FistMotionIsReady() && useButtonDown) {
+            UseConsumableSequence();
+        }
+    }
 
-        // animate the punch
+    void UpdateUselessInput(bool useButtonDown) {
+        if (FistMotionIsReady() && useButtonDown) {
+            DoNothingWobbleSequence();
+        }
+    }
+
+    void DoNothingWobbleSequence() {
+        var leftTwist = _gripPositionDefault.localEulerAngles;
+        var rightTwist = _gripPositionDefault.localEulerAngles;
+
+        leftTwist.z -= 45f;
+        leftTwist.x -= 30f;
+        rightTwist.z += 45f;
+        rightTwist.z += 30f;
+
         DOTween.Sequence()
-            .Append(MoveFistTo(_gripPositionPunchFinish, _punchTime, _attackCurve)) // punching
+            .AppendCallback(SetFistMoving)
+            .Append(RotateFistTo(leftTwist, .15f))
+            .Append(RotateFistTo(rightTwist, .15f))
+            .Append(MoveFistTo(_gripPositionDefault, .15f))
+            .OnComplete(SetFistReady);
+    }
+
+    void BeginPunch() {
+        DOTween.Sequence()
+            .AppendCallback(() => {
+                SetFistMoving();
+                _playerWeaponsManager.LowerWeapon();
+            })
+            .Append(MoveFistTo(_gripPositionPunchLoad, _punchTime * .25f, _attackCurve)) // punching
+            .AppendCallback(ForwardPunch)
+            .Append(MoveFistTo(_gripPositionPunchFinish, _punchTime * .75f, _attackCurve)) // punching
             .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recovering
             .OnComplete(() => {
                 SetFistReady();
@@ -268,9 +307,14 @@ public class PlayerGripManager : MonoBehaviour {
     }
 
     void Grip(Grippable gripped) {
-        _currentlyGrippedThing = gripped;
+        ClaimGrippable(gripped);
 
-        TrackGrippedPosition();
+        // play a short pickup motion
+        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .25f);
+    }
+
+    void ClaimGrippable(Grippable gripped) {
+        _currentlyGrippedThing = gripped;
 
         // parent the socket and change its old reference
         gripped.transform.SetParent(_gripSocket.transform, true);
@@ -280,21 +324,14 @@ public class PlayerGripManager : MonoBehaviour {
 
         // subscribe to recoil
         _currentlyGrippedThing.onRecoilReceived.AddListener(RecoilFist);
-
-        // play a short pickup motion
-        TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f);
     }
 
     // BUG: throwing forward often stops forward motion due to hitting the collider
     void ThrowGrippedThing() {
-        SetFistMoving();
-
-        // throw immediately
-        DoThrow();
-
-        // animate the throw
         DOTween.Sequence()
+            .AppendCallback(SetFistMoving)
             .Append(MoveFistTo(_gripPositionThrow, _throwTime, _attackCurve)) // throw
+            .AppendCallback(DoThrow)
             .Append(MoveFistTo(_gripPositionDefault, _cooldownTime)) // recover
             .OnComplete(() => SetFistReady());
     }
@@ -431,47 +468,34 @@ public class PlayerGripManager : MonoBehaviour {
 
     // Tweening stuff
     void SetDownGrippedThing() {
-        // play a short pickup motion
         TeleportThenMoveFist(_gripPositionDown, _gripPositionDefault, .1f)
             .OnComplete(() => RaycastAndDropGrippable());
     }
 
     void BeginUseHold() {
-        // feels more responsive to begin immediately
-        SetFistMoving();
-        _currentlyGrippedThing.ActivateBegin();
-        MoveFistTo(_gripPositionUseHold, _punchTime)
-            .OnComplete(() => {
-                _gripMotionState = GripMotionState.LiftingUp;
-            });
+        DOTween.Sequence()
+            .AppendCallback(_currentlyGrippedThing.ActivateBegin) // feels responsive to activate immediately
+            .AppendCallback(SetFistMoving)
+            .Append(MoveFistTo(_gripPositionUseHold, _punchTime))
+            .OnComplete(() => _gripMotionState = GripMotionState.LiftingUp);
     }
 
     void EndUseHold() {
-        SetFistMoving();
-        MoveFistTo(_gripPositionDefault, _cooldownTime)
-            .OnComplete(() => {
-                _currentlyGrippedThing.ActivateEnd();
-                SetFistReady();
-            });
+        DOTween.Sequence()
+            .AppendCallback(SetFistMoving)
+            .Append(MoveFistTo(_gripPositionDefault, _cooldownTime))
+            .AppendCallback(_currentlyGrippedThing.ActivateEnd)
+            .OnComplete(SetFistReady);
     }
 
-    void BeginUseConsumable() {
-        SetFistMoving();
-        MoveFistTo(_gripPositionUseHold, _useTime / 2)
-            .OnComplete(() => DoUseConsumable());
-    }
-
-    void DoUseConsumable() {
-        _currentlyGrippedThing.ActivateBegin();
-
-        MoveFistTo(_gripPositionUseTwist, _useTime / 2)
-            .OnComplete(() => EndUseConsumable());
-    }
-
-    void EndUseConsumable() {
-        MoveFistTo(_gripPositionDefault, _cooldownTime);
-
-        SetFistReady();
+    void UseConsumableSequence() {
+        DOTween.Sequence()
+            .AppendCallback(SetFistMoving)
+            .Append(MoveFistTo(_gripPositionUseHold, _useTime / 2))
+            .AppendCallback(_currentlyGrippedThing.ActivateBegin)
+            .Append(MoveFistTo(_gripPositionUseTwist, _useTime / 2))
+            .Append(MoveFistTo(_gripPositionDefault, _cooldownTime))
+            .OnComplete(SetFistReady);
     }
 
     Tween MoveFistTo(Transform goal, float duration) {
@@ -485,6 +509,10 @@ public class PlayerGripManager : MonoBehaviour {
             .Join(_gripSocket.DOLocalRotateQuaternion(goal.localRotation, duration));
 
         return s;
+    }
+
+    Tween RotateFistTo(Vector3 targetEulers, float duration) {
+        return _gripSocket.DOLocalRotate(targetEulers, duration);
     }
 
     Tween MoveFistTo(Transform target, float duration, AnimationCurve curve) {

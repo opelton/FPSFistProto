@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 public class Grippable : MonoBehaviour {
-    public enum ActivationType { Press, Hold }
+    public enum ActivationType { Nothing, Press, Hold }
 
     [SerializeField] ActivationType _activationType = ActivationType.Press;
     [SerializeField] Transform gripAnchor;
