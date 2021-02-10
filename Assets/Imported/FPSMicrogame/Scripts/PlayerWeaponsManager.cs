@@ -66,11 +66,11 @@ public class PlayerWeaponsManager : MonoBehaviour {
         get { // if no active weapon, test from weapon camera
             if (isAiming && weaponCamera != null) {
                 return weaponCamera.transform.position;
-            } else if (m_PlayerCharacterController != null) { 
+            } else if (m_PlayerCharacterController != null) {
                 return m_PlayerCharacterController.playerCamera.transform.position;
             }
-                // if no weapon camera, test from transform
-                return transform.position;
+            // if no weapon camera, test from transform
+            return transform.position;
         }
     }
 
@@ -101,7 +101,6 @@ public class PlayerWeaponsManager : MonoBehaviour {
     PlayerInputHandler m_InputHandler;
     PlayerCharacterController m_PlayerCharacterController;
     float m_WeaponBobFactor;
-    Vector3 m_LastCharacterPosition;
     Vector3 m_WeaponMainLocalPosition;
     Vector3 m_WeaponBobLocalPosition;
     Vector3 m_WeaponRecoilLocalPosition;
@@ -335,28 +334,17 @@ public class PlayerWeaponsManager : MonoBehaviour {
 
     // Updates the weapon bob animation based on character speed
     void UpdateWeaponBob() {
-        if (Time.deltaTime > 0f) {
-            Vector3 playerCharacterVelocity = (m_PlayerCharacterController.transform.position - m_LastCharacterPosition) / Time.deltaTime;
+        m_WeaponBobFactor = Mathf.Lerp(m_WeaponBobFactor, m_PlayerCharacterController.characterMovementFactor, bobSharpness * Time.deltaTime);
 
-            // calculate a smoothed weapon bob amount based on how close to our max grounded movement velocity we are
-            float characterMovementFactor = 0f;
-            if (m_PlayerCharacterController.isGrounded) {
-                characterMovementFactor = Mathf.Clamp01(playerCharacterVelocity.magnitude / (m_PlayerCharacterController.maxSpeedOnGround * m_PlayerCharacterController.sprintSpeedModifier));
-            }
-            m_WeaponBobFactor = Mathf.Lerp(m_WeaponBobFactor, characterMovementFactor, bobSharpness * Time.deltaTime);
+        // Calculate vertical and horizontal weapon bob values based on a sine function
+        float bobAmount = isAiming ? aimingBobAmount : defaultBobAmount;
+        float frequency = bobFrequency;
+        float hBobValue = Mathf.Sin(Time.time * frequency) * bobAmount * m_WeaponBobFactor;
+        float vBobValue = ((Mathf.Sin(Time.time * frequency * 2f) * 0.5f) + 0.5f) * bobAmount * m_WeaponBobFactor;
 
-            // Calculate vertical and horizontal weapon bob values based on a sine function
-            float bobAmount = isAiming ? aimingBobAmount : defaultBobAmount;
-            float frequency = bobFrequency;
-            float hBobValue = Mathf.Sin(Time.time * frequency) * bobAmount * m_WeaponBobFactor;
-            float vBobValue = ((Mathf.Sin(Time.time * frequency * 2f) * 0.5f) + 0.5f) * bobAmount * m_WeaponBobFactor;
-
-            // Apply weapon bob
-            m_WeaponBobLocalPosition.x = hBobValue;
-            m_WeaponBobLocalPosition.y = Mathf.Abs(vBobValue);
-
-            m_LastCharacterPosition = m_PlayerCharacterController.transform.position;
-        }
+        // Apply weapon bob
+        m_WeaponBobLocalPosition.x = hBobValue;
+        m_WeaponBobLocalPosition.y = Mathf.Abs(vBobValue);
     }
 
     // Updates the weapon recoil animation

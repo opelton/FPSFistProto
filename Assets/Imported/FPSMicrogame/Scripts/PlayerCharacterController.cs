@@ -84,6 +84,7 @@ public class PlayerCharacterController : MonoBehaviour {
     public UnityAction<bool> onStanceChanged;
 
     public Vector3 characterVelocity { get; set; }
+    public float characterMovementFactor { get; private set; }
     public bool isGrounded { get; private set; }
     public bool hasJumpedThisFrame { get; private set; }
     public bool isDead { get; private set; }
@@ -318,6 +319,16 @@ public class PlayerCharacterController : MonoBehaviour {
             m_LatestImpactSpeed = characterVelocity;
 
             characterVelocity = Vector3.ProjectOnPlane(characterVelocity, hit.normal);
+        }
+        UpdateMovementFactor();
+    }
+
+    void UpdateMovementFactor() {
+        // calculate a smoothed value for how close to our max grounded movement velocity we are
+        if (isGrounded) {
+            characterMovementFactor = Mathf.Clamp01(characterVelocity.magnitude / (maxSpeedOnGround * sprintSpeedModifier));
+        } else {
+            characterMovementFactor = 0f;
         }
     }
 

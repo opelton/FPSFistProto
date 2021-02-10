@@ -30,6 +30,16 @@ public class PlayerGripManager : MonoBehaviour {
     [SerializeField] float _useTime = .4f;
     [SerializeField] AnimationCurve _attackCurve = new AnimationCurve();
 
+    [Header("Movement Bob")]
+    [Tooltip("Frequency at which the fist will move around in the screen when the player is in movement")]
+    [SerializeField] float _bobFrequency = 10f;
+    [Tooltip("How fast movement bob is applied, the bigger value the fastest")]
+    [SerializeField] float _bobSharpness = 10f;
+    [Tooltip("Distance the fist bobs when not aiming")]
+    [SerializeField] float _defaultBobAmount = 0.05f;
+    [Tooltip("Distance the fist bobs when aiming")]
+    [SerializeField] float _raisingBobAmount = 0.02f;
+
     [Header("Fist Recoil")]
     [Tooltip("This will affect how fast the recoil moves the fist, the bigger the value, the fastest")]
     public float recoilSharpness = 50f;
@@ -51,6 +61,7 @@ public class PlayerGripManager : MonoBehaviour {
     Vector3 _mainSocketRecoilLocalPosition = Vector3.zero;
     Vector3 m_AccumulatedRecoil = Vector3.zero;
     GripMotionState _gripMotionState = GripMotionState.Ready;
+    float _movementBobFactor;
 
     // dependencies 
     PlayerInputHandler m_InputHandler;
@@ -114,8 +125,8 @@ public class PlayerGripManager : MonoBehaviour {
 
     // Update various animated features in LateUpdate because it needs to override the animated arm position
     void LateUpdate() {
-        // TODO -- movement bob
         UpdateGripRecoil();
+        UpdateMovementBob();
 
         // Set final weapon socket position based on all the combined animation influences
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
@@ -170,6 +181,20 @@ public class PlayerGripManager : MonoBehaviour {
             _mainSocketRecoilLocalPosition = Vector3.Lerp(_mainSocketRecoilLocalPosition, Vector3.zero, recoilRestitutionSharpness * Time.deltaTime);
             m_AccumulatedRecoil = _mainSocketRecoilLocalPosition;
         }
+    }
+
+    void UpdateMovementBob() {
+        _movementBobFactor = Mathf.Lerp(_movementBobFactor, _playerController.characterMovementFactor, _bobSharpness * Time.deltaTime);
+
+        // Calculate vertical and horizontal weapon bob values based on a sine function
+        float bobAmount = !FistMotionIsReady() ? _raisingBobAmount : _defaultBobAmount;
+        float frequency = _bobFrequency;
+        float hBobValue = Mathf.Sin(Time.time * frequency) * bobAmount * _movementBobFactor;
+        float vBobValue = ((Mathf.Sin(Time.time * frequency * 2f) * 0.5f) + 0.5f) * bobAmount * _movementBobFactor;
+
+        // Apply weapon bob
+        _mainSocketBobLocalPosition.x = hBobValue;
+        _mainSocketBobLocalPosition.y = Mathf.Abs(vBobValue);
     }
 
     void UpdateUseInput(bool useButtonDown, bool useButtonHeld) {
