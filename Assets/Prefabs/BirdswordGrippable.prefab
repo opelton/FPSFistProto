@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 684259969058226325}
   - component: {fileID: 684259969058226335}
   - component: {fileID: 684259969058226329}
+  - component: {fileID: 8714093938921271983}
   m_Layer: 11
   m_Name: BirdswordGrippable
   m_TagString: Untagged
@@ -34,6 +35,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 246821407598618241}
+  - {fileID: 4546438478843834611}
+  - {fileID: 7521232745813656964}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4667,7 +4670,7 @@ MonoBehaviour:
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
-  m_SelectedVertices: 83000000
+  m_SelectedVertices: 
 --- !u!114 &684259969058226325
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4733,6 +4736,84 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.05487069, y: 2.2383127, z: 0.34098893}
   m_Center: {x: 0.000000059604645, y: 1.1241093, z: -0.00000011175871}
+--- !u!114 &8714093938921271983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 684259969058226324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f31fba61750f304b81d9860b13f61ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startPosition: {fileID: 4546438478843834611}
+  endPosition: {fileID: 7521232745813656964}
+  attackEasing: 6
+  windupTime: 0.2
+  strikeTime: 0.5
+  cooldownTime: 0.3
+--- !u!1 &5282862059712230702
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4546438478843834611}
+  m_Layer: 11
+  m_Name: Start
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4546438478843834611
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5282862059712230702}
+  m_LocalRotation: {x: 0, y: 0, z: 0.5735764, w: 0.8191521}
+  m_LocalPosition: {x: -1.436, y: 0.08, z: 0.992}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 684259969058226334}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 70}
+--- !u!1 &6055417504078811122
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7521232745813656964}
+  m_Layer: 11
+  m_Name: End
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7521232745813656964
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6055417504078811122}
+  m_LocalRotation: {x: 0.8085882, y: 0.58837444, z: 0.00022246205, w: 0.0007738424}
+  m_LocalPosition: {x: 1.739, y: -0.602, z: 0.992}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 684259969058226334}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0.057000004, y: 179.927, z: 107.91601}
 --- !u!1 &7825833845589179546
 GameObject:
   m_ObjectHideFlags: 0

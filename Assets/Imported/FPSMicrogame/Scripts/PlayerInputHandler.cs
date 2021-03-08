@@ -165,6 +165,20 @@ public class PlayerInputHandler : MonoBehaviour {
         return false;
     }
 
+    public bool GetThrowInputDown() {
+        if (CanProcessInput()) {
+            return Input.GetButtonDown(GameConstants.k_ButtonNameThrow);
+        }
+        return false;
+    }
+
+    public bool GetThrowInputHeld() {
+        if (CanProcessInput()) {
+            return Input.GetButton(GameConstants.k_ButtonNameThrow);
+        }
+        return false;
+    }
+
     public int GetSwitchWeaponInput() {
         if (CanProcessInput()) {
 
