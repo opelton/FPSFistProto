@@ -107,4 +107,8 @@ public class GameFlowManager : MonoBehaviour
             m_TimeLoadEndGameScene = Time.time + endSceneLoadDelay;
         }
     }
+
+    public void ReloadScene() { 
+        EndGame(false);
+    }
 }
