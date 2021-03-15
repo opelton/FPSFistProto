@@ -10,7 +10,7 @@ public class Damageable : MonoBehaviour {
     public Health health { get; private set; }
     public FloatEvent onDamageTaken;
 
-    void Awake() {
+    protected virtual void Awake() {
         // find the health component either at the same level, or higher in the hierarchy
         health = GetComponent<Health>();
         if (!health) {
@@ -18,7 +18,7 @@ public class Damageable : MonoBehaviour {
         }
     }
 
-    public void InflictDamage(float damage, bool isExplosionDamage, GameObject damageSource, Vector3 damagePoint) {
+    public virtual void InflictDamage(float damage, bool isExplosionDamage, GameObject damageSource, Vector3 damagePoint) {
         var totalDamage = damage;
 
         // skip the crit multiplier if it's from an explosion

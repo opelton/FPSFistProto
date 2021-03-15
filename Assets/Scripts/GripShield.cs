@@ -1,18 +1,25 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Grippable))]
-[RequireComponent(typeof(Damageable))]
 public class GripShield : MonoBehaviour {
     Grippable _gripBase;
-    Damageable _damage;
+    BlockableDamageable _blocker;
 
     void Awake() {
         _gripBase = GetComponent<Grippable>();
         _gripBase.onActivatedBegin.AddListener(BeginBlocking);
         _gripBase.onActivatedEnd.AddListener(EndBlocking);
+        _gripBase.onGrabbed.AddListener(RegisterOwner);
+        _gripBase.onDropped.AddListener(UnregisterOwner);
+    }
 
-        _damage = GetComponent<Damageable>();
-        _damage.onDamageTaken.AddListener(ShieldDamaged);
+    void RegisterOwner(GameObject owner) {
+        _blocker = owner.GetComponent<BlockableDamageable>();
+        _blocker.onDamageBlocked.AddListener(ShieldDamaged);
+    }
+
+    void UnregisterOwner() { 
+        _blocker = null;
     }
 
     void ShieldDamaged(float impactForce) {
@@ -20,10 +27,10 @@ public class GripShield : MonoBehaviour {
     }
 
     void BeginBlocking(GameObject gripper) {
-        _gripBase.EnableFirstPersonBlocking();
+        _blocker.BeginBlocking();
     }
 
     void EndBlocking(GameObject gripper) {
-        _gripBase.DisableFirstPersonBlocking();
+        _blocker.EndBlocking();
     }
 }

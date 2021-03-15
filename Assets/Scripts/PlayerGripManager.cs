@@ -151,20 +151,6 @@ public class PlayerGripManager : MonoBehaviour {
         _gripSocket.localPosition = _mainSocketLocalPosition + _mainSocketBobLocalPosition + _mainSocketRecoilLocalPosition;
 
         // grippables with rigidbodies will drift away unless their position is manually updated
-        TrackGrippedPosition();
-    }
-
-    void TrackGrippedPosition() {
-        if (!IsEmptyHanded) {
-            _currentlyGrippedThing.transform.position = _gripSocket.position;
-            _currentlyGrippedThing.transform.rotation = _gripSocket.rotation;
-
-            // get the offset vector from the body socket to the item's socket
-            var socketOffset = _gripSocket.position - _currentlyGrippedThing.gripPoint.position;
-
-            // shift item by that amount to line up
-            _currentlyGrippedThing.transform.position += socketOffset;
-        }
     }
 
     void TryForwardGrab() {
@@ -360,6 +346,7 @@ public class PlayerGripManager : MonoBehaviour {
 
     void Grip(Grippable gripped) {
         ClaimGrippable(gripped);
+        AlignGrippableWithFist(gripped);
 
         // play a short pickup motion
         MoveFistFromSequence(_gripPositionDown, _gripPositionDefault, .25f);
@@ -376,6 +363,17 @@ public class PlayerGripManager : MonoBehaviour {
 
         // subscribe to recoil
         _currentlyGrippedThing.onRecoilReceived.AddListener(RecoilFist);
+    }
+
+    void AlignGrippableWithFist(Grippable gripped) {
+        gripped.transform.position = _gripSocket.position;
+        gripped.transform.rotation = _gripSocket.rotation;
+
+        // get the offset vector from the body socket to the item's socket
+        var socketOffset = _gripSocket.position - gripped.gripPoint.position;
+
+        // shift item by that amount to line up
+        gripped.transform.position += socketOffset;
     }
 
     // BUG: throwing forward often stops forward motion due to hitting the collider

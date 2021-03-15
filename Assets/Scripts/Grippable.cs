@@ -10,7 +10,7 @@ public class Grippable : MonoBehaviour {
     [SerializeField] float _throwDamage = 10f;
 
     [HideInInspector] public GripActionEvent onGrabbed;
-    [HideInInspector] public GripActionEvent onDropped;
+    [HideInInspector] public UnityEvent onDropped;
     [HideInInspector] public GripActionEvent onThrown;
     [HideInInspector] public UnityEvent onThrowImpact;
     [HideInInspector] public GripActionEvent onActivatedBegin;
@@ -20,6 +20,7 @@ public class Grippable : MonoBehaviour {
     // members
     public Transform gripPoint => gripAnchor != null ? gripAnchor : gameObject.transform;
     public ActivationType activationType => _activationType;
+    public GameObject GripOwner => _owner;
 
     // privates
     Collider _collider;
@@ -29,6 +30,7 @@ public class Grippable : MonoBehaviour {
     bool _thrown;
     bool _blocking;
     GameObject _owner;
+    RigidbodyCopy _shelvedBody;
 
     void Start() {
         _collider = GetComponent<Collider>();
@@ -50,6 +52,7 @@ public class Grippable : MonoBehaviour {
         _owner = null;
         RestorePhysics();
         RestoreLayerMask();
+        onDropped.Invoke();
     }
 
     public void Throw(Vector3 direction, float force) {
@@ -102,28 +105,23 @@ public class Grippable : MonoBehaviour {
         _collider.enabled = false;
 
         if (_body != null) {
-            _body.isKinematic = true;
-            _body.detectCollisions = false;
+
+            // only needs to happen once per item
+            if (_shelvedBody == null) {
+                _shelvedBody = new RigidbodyCopy(_body);
+            }
+
+            Destroy(_body);
+            _body = null;
         }
     }
 
     void RestorePhysics() {
         _collider.enabled = true;
 
-        if (_body != null) {
-            _body.isKinematic = false;
-            _body.detectCollisions = true;
+        if (_shelvedBody != null) {
+            _body = _shelvedBody.CopyTo(gameObject);
         }
-    }
-
-    public void EnableFirstPersonBlocking() {
-        _blocking = true;
-        RestorePhysics();
-    }
-
-    public void DisableFirstPersonBlocking() {
-        _blocking = false;
-        ShelvePhysics();
     }
 
     // TODO -- throw collisions are inconsistent
