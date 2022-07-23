@@ -105,7 +105,6 @@ public class PlayerCharacterController : MonoBehaviour {
     PlayerWeaponsManager m_WeaponsManager;
     Actor m_Actor;
     Vector3 m_GroundNormal;
-    Vector3 m_CharacterVelocity;
     Vector3 m_LatestImpactSpeed;
     float m_LastTimeJumped = 0f;
     float m_CameraVerticalAngle = 0f;

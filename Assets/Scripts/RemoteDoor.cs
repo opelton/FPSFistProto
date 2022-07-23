@@ -14,7 +14,7 @@ public class RemoteDoor : MonoBehaviour {
     bool _isOpen = false;
 
     public void TryOpenDoor() {
-        if (_usable && !_locked) {
+        if (!_locked) {
             _isOpen = true;
             BeginDoorMove();
 
@@ -23,12 +23,10 @@ public class RemoteDoor : MonoBehaviour {
     }
 
     public void TryCloseDoor() {
-        if (_usable) {
-            _isOpen = false;
-            BeginDoorMove();
+        _isOpen = false;
+        BeginDoorMove();
 
-            MoveDoorClosed().OnComplete(EndDoorMove);
-        }
+        MoveDoorClosed().OnComplete(EndDoorMove);
     }
 
     public void TryToggleDoor() {
@@ -42,7 +40,7 @@ public class RemoteDoor : MonoBehaviour {
     public void Unlock() { _locked = false; }
     public void Lock() { _locked = true; }
 
-    public void TryUnlockOpen() { 
+    public void TryUnlockOpen() {
         Unlock();
         TryOpenDoor();
     }

@@ -44,7 +44,7 @@ public class MountedWeapon : MonoBehaviour {
         _mountedWeapon.HandleShootInputs(true, true, true);
     }
 
-    public void ToggleAutofire() { 
-        _firing = !_firing;
-    }
+    public void ToggleAutofire() { _firing = !_firing; }
+    public void AutofireOn() { _firing = true; }
+    public void AutofireOff() { _firing = false; }
 }
