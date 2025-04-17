@@ -21,14 +21,11 @@ public class KeycardPanel : MonoBehaviour {
         _audioSource = GetComponent<AudioSource>();
     }
 
-    // todo -- ping light turns on early, give it the same delay as the ping sound
     public void KeycardPing(Vector3 keycardPos) {
         var distance = (keycardPos - transform.position).magnitude;
 
         if (distance <= _unlockDistance) {
             KeyLightOn();
-        } else {
-            PingLightOn();
         }
 
         if (_panelReady) {
@@ -46,17 +43,17 @@ public class KeycardPanel : MonoBehaviour {
 
     IEnumerator DelayedPing(float distance) {
         yield return new WaitForSeconds(_pingDelay);
+        PingLightOn();
         _panelReady = true;
         _audioSource.spatialBlend = 0.85f;
         if (distance <= _unlockDistance) {
-            // playtesters didn't get that they also had to push the keycard button when near the door, so the unlock is automatic now
-            //onDoorToggle.Invoke();    
             _audioSource.pitch = 0.5f;
         } else {
             _audioSource.pitch = 1.0f;
         }
         _audioSource.PlayOneShot(_pingSfx);
 
+        yield return new WaitForSeconds(_pingDelay);
         PingLightOff();
         KeyLightOff();
     }
