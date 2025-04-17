@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// fires a gun in a straight line when activated, compatible with FPSMicrogame guns
 public class MountedWeapon : MonoBehaviour {
     [SerializeField] WeaponController _weaponPrefab;
     [SerializeField] Transform _weaponRoot;

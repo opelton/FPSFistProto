@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// heals when used or smashed nearby
 public class PotionBottle : MonoBehaviour {
     [SerializeField] GameObject onUsedFX;
     [SerializeField] float _healAmount = 10f;

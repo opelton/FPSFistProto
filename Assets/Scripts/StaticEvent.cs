@@ -1,5 +1,7 @@
 using System;
 
+// neat events that self-manage their listeners per-type
+// was fun, but not as powerful as built-in UnityEvents, so I stopped using this
 public abstract class StaticEvent<T> where T : StaticEvent<T> {
     public string Description;
 
@@ -15,3 +17,16 @@ public abstract class StaticEvent<T> where T : StaticEvent<T> {
         }
     }
 }
+
+// sample usage
+/*
+public class PlayerDamagedEvent : StaticEvent<PlayerDamagedEvent> { 
+    public int damageAmount;
+}
+
+PlayerDamagedEvent.RegisterListener(foo);
+
+PlayerDamagedEvent PDE;
+PDE.damageAmount = 100;
+PlayerDamagedEvent.Dispatch();
+*/

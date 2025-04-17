@@ -4,6 +4,7 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 
+// unlocks a door, and can also help with locating the door
 public class Keycard : MonoBehaviour {
     public Vector3Event onButtonPressed;
     public UnityEvent onUnlockProximity;

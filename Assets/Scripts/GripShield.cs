@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// shield item that blocks bullets when held and activated
 [RequireComponent(typeof(Grippable))]
 public class GripShield : MonoBehaviour {
     Grippable _gripBase;

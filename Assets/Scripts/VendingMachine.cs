@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// spawns items, currently has no limit, playtesters love this more than anything else in the whole prototype
 public class VendingMachine : MonoBehaviour {
     [SerializeField] GameObject _vendPrefab;
     [SerializeField] float _vendCooldown;

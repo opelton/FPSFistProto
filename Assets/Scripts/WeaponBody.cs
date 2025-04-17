@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// experimental
 public class WeaponBody : MonoBehaviour {
     public Transform StockSocket;
     public Transform ScopeSocket;

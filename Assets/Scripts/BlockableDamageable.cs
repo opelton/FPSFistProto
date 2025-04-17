@@ -1,10 +1,13 @@
 using UnityEngine;
 
+// a held item that can block damage from reaching the player
 public class BlockableDamageable : Damageable {
     [SerializeField] float blockAngle = 90f;
     [SerializeField] Transform forwardBlockTransform;
 
     public FloatEvent onDamageBlocked;
+
+    // tweening positions
     public Vector3 BlockForward => forwardBlockTransform != null ? forwardBlockTransform.forward : transform.forward;
     public Vector3 BlockPosition => forwardBlockTransform != null ? forwardBlockTransform.position : transform.position;
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// experimental
 public class WeaponFactory : MonoBehaviour {
 
     [SerializeField]

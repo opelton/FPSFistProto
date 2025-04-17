@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
+// unlocks a door when the associated keycard is nearby, emits a noise when the keycard pings the door's location
 public class KeycardPanel : MonoBehaviour {
     public UnityEvent onDoorToggle;
     [SerializeField] float _unlockDistance = 10f;
@@ -20,6 +21,7 @@ public class KeycardPanel : MonoBehaviour {
         _audioSource = GetComponent<AudioSource>();
     }
 
+    // todo -- ping light turns on early, give it the same delay as the ping sound
     public void KeycardPing(Vector3 keycardPos) {
         var distance = (keycardPos - transform.position).magnitude;
 
@@ -47,7 +49,8 @@ public class KeycardPanel : MonoBehaviour {
         _panelReady = true;
         _audioSource.spatialBlend = 0.85f;
         if (distance <= _unlockDistance) {
-            //onDoorToggle.Invoke();
+            // playtesters didn't get that they also had to push the keycard button when near the door, so the unlock is automatic now
+            //onDoorToggle.Invoke();    
             _audioSource.pitch = 0.5f;
         } else {
             _audioSource.pitch = 1.0f;

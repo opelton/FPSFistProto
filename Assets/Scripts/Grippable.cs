@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+// item the player can pick up and hold in their off-hand
 public class Grippable : MonoBehaviour {
     public enum ActivationType { Nothing, Press, Hold }
 
@@ -38,6 +39,7 @@ public class Grippable : MonoBehaviour {
         _storedLayerMask = gameObject.layer;
     }
 
+    // moves a gripped item from worldspace to player's camera space, removing its collision, and rendering it over other scenery
     public void BecomeGripped(GameObject gripper, LayerMask hudLayer) {
         _hudLayerMask = hudLayer;
         OverrideLayerMask();
@@ -169,6 +171,7 @@ public class Grippable : MonoBehaviour {
         }
     }
 
+    // returns objects that overlap the sphere and were in line of sight
     T[] CheckSphereAndLOS<T>(Vector3 center, float radius) where T : MonoBehaviour {
         var overlaps = Physics.OverlapSphere(center, radius);
         List<T> losVisible = new List<T>();

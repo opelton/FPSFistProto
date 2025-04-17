@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+// button that can be triggered by gunfire, punching, throwing, or pressing
 public class PunchButton : MonoBehaviour {
     public UnityEvent onButtonPressed;
     [SerializeField] bool _readyOnAwake = true;

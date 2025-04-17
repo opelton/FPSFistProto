@@ -2,6 +2,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
+// manages timings, keyframes, and motion curves for a melee attack with a held item
 public class GripMelee : MonoBehaviour {
     public delegate Tween FistMotionDelegate(Transform goal, float duration);
     public delegate Tween ResetFistPositionDelegate(float duration);
