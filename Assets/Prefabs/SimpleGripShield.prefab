@@ -850,8 +850,8 @@ GameObject:
   - component: {fileID: 3714996140566998661}
   - component: {fileID: 3714996140566998662}
   - component: {fileID: 1700335299}
-  - component: {fileID: 1536866670}
   - component: {fileID: 1863233011912445201}
+  - component: {fileID: -5366746188494480143}
   m_Layer: 11
   m_Name: SimpleGripShield
   m_TagString: Untagged
@@ -1001,23 +1001,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 487acda45e03e4f4cab72c6bdd889eff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1536866670
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3714996140566998663}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9b0ce1bb69c96b49a7ac1098a7f5796, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damageMultiplier: 0
-  sensibilityToSelfdamage: 0
-  onDamageTaken:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &1863233011912445201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1036,6 +1019,27 @@ MonoBehaviour:
   windupTime: 0.45
   strikeTime: 0.2
   cooldownTime: 0.6
+--- !u!114 &-5366746188494480143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3714996140566998663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28ff4eb91fa4c0e4ebba63d397a25c2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageMultiplier: 1
+  sensibilityToSelfdamage: 0.5
+  onDamageTaken:
+    m_PersistentCalls:
+      m_Calls: []
+  blockAngle: 50
+  onDamageBlocked:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &7980272775095222315
 GameObject:
   m_ObjectHideFlags: 0
