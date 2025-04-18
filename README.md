@@ -2,7 +2,7 @@ FPSFistProto is a simple FPS hand prototyped in Unity Engine, built on top of th
 
 The hand is meant to expand the standard FPS prop-grab, by adding a visual presence, a barehanded attack, and more options when holding an item. Going forward, I would try to simplify the experience by reducing the hand's features, or limiting/removing the player's gun.
 
-Playable webGL build of the prototype is available here: https://simmer.io/@namespaceKam/fps-proto-sandbox
+Playable webGL build of the prototype is available here: https://opelton.github.io/FPSFistProtoWebGL
 
 
 Controls (barehanded):
